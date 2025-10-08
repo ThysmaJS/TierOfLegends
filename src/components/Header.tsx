@@ -48,7 +48,7 @@ export default function Header() {
                   className="rounded-md bg-gray-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
                   href="/register"
                 >
-                  S'inscrire   
+                  S&apos;inscrire   
                 </Link>
               </div>
             </div>
