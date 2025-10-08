@@ -3,6 +3,22 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Tier of Legends Custom Colors */
+  --primary-dark: #111827;     /* gray-900 */
+  --primary-light: #f9fafb;    /* gray-50 */
+  --secondary-dark: #1f2937;   /* gray-800 */
+  --text-primary: #ffffff;     /* white */
+  --text-secondary: #9ca3af;   /* gray-400 */
+  --text-dark: #111827;        /* gray-900 */
+  --text-medium: #6b7280;      /* gray-500 */
+  --text-light: #d1d5db;       /* gray-300 */
+  --accent-blue: #2563eb;      /* blue-600 */
+  --accent-blue-hover: #1d4ed8; /* blue-700 */
+  --warning-bg: #fef3c7;       /* yellow-100 */
+  --warning-border: #d97706;   /* yellow-600 */
+  --card-bg: #ffffff;          /* white */
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
 
 @theme inline {
