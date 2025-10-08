@@ -63,6 +63,9 @@ Ce projet utilise l'API officielle de Riot Games pour récupérer les données d
 - **Endpoints utilisés** :
   - Champions : `/lol/static-data/v3/champions`
   - Skins : Données intégrées dans les informations des champions
+- **Endpoints complet** :
+  - Liste des champions: GET https://ddragon.leagueoflegends.com/cdn/15.20.1/data/en_US/champion.json
+  - Liste d'un champion en particulier : GET https://ddragon.leagueoflegends.com/cdn/15.20.1/data/en_US/champion/Alistar.json
 
 ## 🎨 Fonctionnalités
 
