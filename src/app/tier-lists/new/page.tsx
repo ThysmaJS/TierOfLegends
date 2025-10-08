@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import { TierListMaker, type Tier } from 'react-tierlist';
 import Link from 'next/link';
 
@@ -71,8 +72,8 @@ export default function CreateTierListPage() {
         const json: ApiChampionsResponse = await res.json();
         const mapped: ChampionOption[] = json.champions.map(c => ({ id: c.id, name: c.name, image: c.image }));
         setChampions(mapped);
-      } catch (e: any) {
-        setError(e.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Erreur inconnue');
       } finally {
         setLoadingChampions(false);
       }
@@ -95,8 +96,8 @@ export default function CreateTierListPage() {
           ...BASE_TIERS.map(name => ({ name, items: [] as string[] })),
           { name: 'Deck', items: deckItems }
         ]);
-      } catch (e: any) {
-        setError(e.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Erreur inconnue');
       } finally {
         setLoadingSkins(false);
       }
@@ -178,8 +179,7 @@ export default function CreateTierListPage() {
                               onClick={() => { setChampionId(c.id); setChampionQuery(c.name); setOpenChampions(false); }}
                               className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/10 transition-colors ${c.id === championId ? 'bg-blue-600/30' : ''}`}
                             >
-                              {/* TODO: remplacer par <Image /> optimisé Next.js */}
-                              <img src={c.image} alt="" className="w-6 h-6 rounded object-cover" />
+                              <Image src={c.image} alt="" width={24} height={24} className="w-6 h-6 rounded object-cover" />
                               <span className="truncate">{c.name}</span>
                             </button>
                           </li>
@@ -251,11 +251,13 @@ export default function CreateTierListPage() {
               >×</button>
               <div className="flex flex-col md:flex-row">
                 <div className="flex-1 bg-black/40 flex items-center justify-center">
-                  {/* TODO: remplacer par <Image /> pour optimisation */}
-                  <img
+                  <Image
                     src={selectedSkin.splash || selectedSkin.url}
                     alt={selectedSkin.name}
-                    className="max-h-[70vh] object-contain"
+                    width={1215}
+                    height={717}
+                    className="max-h-[70vh] w-auto h-auto object-contain"
+                    priority
                   />
                 </div>
                 <div className="md:w-64 p-4 space-y-4 flex flex-col">
