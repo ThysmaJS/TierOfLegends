@@ -11,7 +11,8 @@ export async function GET(
   try {
     const champ = await getChampionDetails(id, 'en_US');
     return NextResponse.json(champ);
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || 'Failed' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
