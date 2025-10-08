@@ -1,0 +1,21 @@
+diff --git a/node_modules/@hello-pangea/dnd/package.json b/node_modules/@hello-pangea/dnd/package.json
+index 1234567..89abcde 100644
+--- a/node_modules/@hello-pangea/dnd/package.json
++++ b/node_modules/@hello-pangea/dnd/package.json
+@@
+-  "peerDependencies": {
+-    "react": "^16.8.5 || ^17.0.0 || ^18.0.0",
+-    "react-dom": "^16.8.5 || ^17.0.0 || ^18.0.0"
+-  },
++  "peerDependencies": {
++    "react": "^16.8.5 || ^17.0.0 || ^18.0.0 || ^19.0.0",
++    "react-dom": "^16.8.5 || ^17.0.0 || ^18.0.0 || ^19.0.0"
++  },
+   "peerDependenciesMeta": {
+     "react": {
+       "optional": false
+     },
+     "react-dom": {
+       "optional": false
+     }
+   }
