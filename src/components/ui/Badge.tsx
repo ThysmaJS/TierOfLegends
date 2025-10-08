@@ -7,13 +7,13 @@ interface BadgeProps {
 
 export default function Badge({ children, variant = 'blue', size = 'md', className = '' }: BadgeProps) {
   const variantClasses = {
-    blue: 'bg-blue-100 text-blue-800',
-    purple: 'bg-purple-100 text-purple-800',
-    green: 'bg-green-100 text-green-800',
-    red: 'bg-red-100 text-red-800',
-    yellow: 'bg-yellow-100 text-yellow-800',
-    gray: 'bg-gray-100 text-gray-800'
-  };
+    blue: 'bg-blue-500/20 text-blue-300 ring-1 ring-inset ring-blue-400/30',
+    purple: 'bg-purple-500/20 text-purple-300 ring-1 ring-inset ring-purple-400/30',
+    green: 'bg-green-500/20 text-green-300 ring-1 ring-inset ring-green-400/30',
+    red: 'bg-red-500/20 text-red-300 ring-1 ring-inset ring-red-400/30',
+    yellow: 'bg-yellow-500/20 text-yellow-300 ring-1 ring-inset ring-yellow-400/30',
+    gray: 'bg-white/10 text-gray-300 ring-1 ring-inset ring-white/10'
+  } as const;
 
   const sizeClasses = {
     sm: 'px-2 py-1 text-xs',
@@ -21,7 +21,7 @@ export default function Badge({ children, variant = 'blue', size = 'md', classNa
   };
 
   return (
-    <span className={`inline-flex items-center rounded-full font-medium ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}>
+    <span className={`inline-flex items-center rounded-full font-medium backdrop-blur-sm ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}>
       {children}
     </span>
   );

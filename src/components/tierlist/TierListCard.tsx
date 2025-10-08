@@ -26,7 +26,7 @@ export default function TierListCard({
   onEdit
 }: TierListCardProps) {
   return (
-    <div className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+  <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-lg overflow-hidden hover:shadow-md transition-shadow">
       {/* Preview Image */}
       <div className={`aspect-video bg-gradient-to-br ${gradientFrom} ${gradientTo} flex items-center justify-center`}>
         <span className="text-white text-lg font-semibold">{previewText}</span>
@@ -34,11 +34,11 @@ export default function TierListCard({
       
       {/* Content */}
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-sm text-gray-600 mb-3">{description}</p>
+        <h3 className="font-semibold text-white mb-2">{title}</h3>
+        <p className="text-sm text-gray-300 mb-3">{description}</p>
         
         {/* Stats */}
-        <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+  <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
           <span className="flex items-center">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

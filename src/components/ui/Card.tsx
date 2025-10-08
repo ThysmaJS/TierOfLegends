@@ -3,9 +3,10 @@ interface CardProps {
   className?: string;
   padding?: boolean;
   shadow?: 'none' | 'sm' | 'md' | 'lg';
+  as?: keyof JSX.IntrinsicElements;
 }
 
-export default function Card({ children, className = '', padding = true, shadow = 'sm' }: CardProps) {
+export default function Card({ children, className = '', padding = true, shadow = 'sm', as: Tag = 'div' }: CardProps) {
   const shadowClasses = {
     none: '',
     sm: 'shadow-sm',
@@ -14,8 +15,8 @@ export default function Card({ children, className = '', padding = true, shadow 
   };
 
   return (
-    <div className={`bg-white rounded-lg ${shadowClasses[shadow]} ${padding ? 'p-6' : ''} ${className}`}>
+    <Tag className={`rounded-lg ${shadowClasses[shadow]} ${padding ? 'p-6' : ''} ${className}`}>
       {children}
-    </div>
+    </Tag>
   );
 }
