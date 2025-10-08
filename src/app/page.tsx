@@ -1,6 +1,5 @@
-import Link from 'next/link';
 import { Container } from '@/components/layout';
-import { Button, Card } from '@/components/ui';
+import { Card } from '@/components/ui';
 
 export default function Home() {
   return (

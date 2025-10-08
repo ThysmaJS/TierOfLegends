@@ -12,6 +12,15 @@ interface ChampionOption {
   image: string;
 }
 
+interface ApiChampionSummary {
+  id: string; name: string; image: string;
+}
+
+interface ApiChampionsResponse { champions: ApiChampionSummary[] }
+
+interface ApiChampionDetailsSkin { loading: string; splash?: string; name: string }
+interface ApiChampionDetails { skins: ApiChampionDetailsSkin[] }
+
 export default function CreateTierListPage() {
   const [championId, setChampionId] = React.useState('');
   const [tiers, setTiers] = React.useState<Tier[]>([]);
@@ -59,8 +68,8 @@ export default function CreateTierListPage() {
         setLoadingChampions(true);
         const res = await fetch('/api/champions');
         if (!res.ok) throw new Error('Erreur chargement champions');
-        const json = await res.json();
-        const mapped: ChampionOption[] = json.champions.map((c: any) => ({ id: c.id, name: c.name, image: c.image }));
+        const json: ApiChampionsResponse = await res.json();
+        const mapped: ChampionOption[] = json.champions.map(c => ({ id: c.id, name: c.name, image: c.image }));
         setChampions(mapped);
       } catch (e: any) {
         setError(e.message);
@@ -79,9 +88,9 @@ export default function CreateTierListPage() {
         setLoadingSkins(true);
         const res = await fetch(`/api/champions/${championId}`);
         if (!res.ok) throw new Error('Erreur chargement skins');
-        const champ = await res.json();
-        const deckItems: string[] = champ.skins.map((s: any) => s.loading);
-        setSkinsMeta(champ.skins.map((s: any) => ({ url: s.loading, name: s.name, splash: s.splash })));
+        const champ: ApiChampionDetails = await res.json();
+        const deckItems: string[] = champ.skins.map(s => s.loading);
+        setSkinsMeta(champ.skins.map(s => ({ url: s.loading, name: s.name, splash: s.splash })));
         setTiers([
           ...BASE_TIERS.map(name => ({ name, items: [] as string[] })),
           { name: 'Deck', items: deckItems }
@@ -94,10 +103,6 @@ export default function CreateTierListPage() {
     }
     loadSkins();
   }, [championId]);
-
-  function handleChampionChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    setChampionId(e.target.value);
-  }
 
   function handleReset() {
     if (!championId) return;
@@ -148,7 +153,6 @@ export default function CreateTierListPage() {
                       onChange={e => setChampionQuery(e.target.value)}
                       onFocus={() => setOpenChampions(true)}
                       aria-haspopup="listbox"
-                      aria-expanded={openChampions}
                       placeholder="Rechercher..."
                       className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-8 placeholder:text-gray-400"
                     />
@@ -174,6 +178,7 @@ export default function CreateTierListPage() {
                               onClick={() => { setChampionId(c.id); setChampionQuery(c.name); setOpenChampions(false); }}
                               className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/10 transition-colors ${c.id === championId ? 'bg-blue-600/30' : ''}`}
                             >
+                              {/* TODO: remplacer par <Image /> optimisé Next.js */}
                               <img src={c.image} alt="" className="w-6 h-6 rounded object-cover" />
                               <span className="truncate">{c.name}</span>
                             </button>
@@ -246,6 +251,7 @@ export default function CreateTierListPage() {
               >×</button>
               <div className="flex flex-col md:flex-row">
                 <div className="flex-1 bg-black/40 flex items-center justify-center">
+                  {/* TODO: remplacer par <Image /> pour optimisation */}
                   <img
                     src={selectedSkin.splash || selectedSkin.url}
                     alt={selectedSkin.name}

@@ -51,9 +51,16 @@ export async function getChampionList(locale: string = 'en_US'): Promise<RiotCha
   const url = `${CDN}/${version}/data/${locale}/champion.json`;
   const res = await fetch(url, { next: { revalidate: 60 * 60 } }); // revalidate hourly
   if (!res.ok) throw new Error('Failed to fetch champion list');
-  const data = await res.json();
-  const champs = data.data as Record<string, any>;
-  return Object.values(champs).map((c: any) => ({
+  const data: {
+    data: Record<string, {
+      id: string;
+      key: string;
+      name: string;
+      title: string;
+      image: { full: string };
+    }>;
+  } = await res.json();
+  return Object.values(data.data).map(c => ({
     id: c.id,
     key: c.key,
     name: c.name,
@@ -68,9 +75,19 @@ export async function getChampionDetails(championId: string, locale: string = 'e
   const url = `${CDN}/${version}/data/${locale}/champion/${championId}.json`;
   const res = await fetch(url, { next: { revalidate: 60 * 60 } });
   if (!res.ok) throw new Error('Failed to fetch champion details');
-  const json = await res.json();
+  const json: {
+    data: Record<string, {
+      id: string;
+      key: string;
+      name: string;
+      title: string;
+      image: { full: string };
+      skins: { id?: string; num: number; name: string }[];
+    }>;
+  } = await res.json();
   const raw = json.data[championId];
-  const skins: RiotChampionSkin[] = raw.skins.map((s: any) => ({
+  if (!raw) throw new Error(`Champion ${championId} not found in payload`);
+  const skins: RiotChampionSkin[] = raw.skins.map(s => ({
     id: `${raw.id}_${s.num}`,
     num: s.num,
     name: s.name === 'default' ? raw.name : s.name,
