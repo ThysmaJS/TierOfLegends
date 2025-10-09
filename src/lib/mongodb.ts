@@ -7,7 +7,6 @@ const dbName = process.env.MONGODB_DB || 'tier-of-legends';
 
 declare global {
   // cache client promise in dev to avoid multiple connections on HMR
-  // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 

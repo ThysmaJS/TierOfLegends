@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCollection } from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
 import { z, ZodError } from 'zod';
+import type { MongoServerError } from 'mongodb';
 
 const PasswordSchema = z.string()
   .min(8, 'Au moins 8 caractères')
@@ -49,8 +50,13 @@ export async function POST(req: Request) {
 
     // Migrate legacy bad unique index on `username` (without partial filter)
     try {
-      const indexes = await users.listIndexes().toArray();
-      const badUsernameIdx = indexes.find((i: any) => i?.key?.username === 1 && i.unique === true && !i.partialFilterExpression);
+      const indexes = await users.listIndexes().toArray() as Array<{
+        name: string;
+        key: Record<string, 1 | -1>;
+        unique?: boolean;
+        partialFilterExpression?: Record<string, unknown>;
+      }>;
+      const badUsernameIdx = indexes.find((i) => i.key['username'] === 1 && i.unique === true && !i.partialFilterExpression);
       if (badUsernameIdx) {
         await users.dropIndex(badUsernameIdx.name);
         if (process.env.NODE_ENV !== 'production') console.warn('Dropped legacy username unique index:', badUsernameIdx.name);
@@ -97,14 +103,17 @@ export async function POST(req: Request) {
     if (e instanceof ZodError) {
       return NextResponse.json({ error: e.issues.map((i) => i.message).join(', ') }, { status: 400 });
     }
-    if (typeof e === 'object' && e && 'code' in e && (e as any).code === 11000) {
-      const keyPattern = (e as any).keyPattern as Record<string, number> | undefined;
+    // Handle duplicate key error without using `any`
+    type DupErrorDetails = { keyPattern?: Record<string, number>; keyValue?: Record<string, unknown> };
+    if (typeof e === 'object' && e && 'code' in e && (e as MongoServerError).code === 11000) {
+      const dup = e as MongoServerError & DupErrorDetails;
+      const keyPattern = dup.keyPattern;
       let msg = 'Email ou pseudo déjà utilisé';
       if (keyPattern) {
         if ('email' in keyPattern) msg = 'Email déjà enregistré';
         else if ('username' in keyPattern) msg = 'Pseudo déjà pris';
       }
-      const detail = process.env.NODE_ENV !== 'production' ? { keyPattern: (e as any).keyPattern, keyValue: (e as any).keyValue } : undefined;
+      const detail = process.env.NODE_ENV !== 'production' ? { keyPattern: dup.keyPattern, keyValue: dup.keyValue } : undefined;
       return NextResponse.json({ error: msg, ...(detail ? { detail } : {}) }, { status: 409 });
     }
     const message = e instanceof Error ? e.message : 'Failed to register';

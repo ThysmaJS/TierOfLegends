@@ -109,7 +109,7 @@ export default function RegisterPage() {
                 <li className={pw.upper ? 'text-green-400' : 'text-gray-400'}>• 1 majuscule</li>
                 <li className={pw.digit ? 'text-green-400' : 'text-gray-400'}>• 1 chiffre</li>
                 <li className={pw.special ? 'text-green-400' : 'text-gray-400'}>• 1 caractère spécial</li>
-                <li className={pw.nospace ? 'text-green-400' : 'text-gray-400'}>• Pas d'espace</li>
+                <li className={pw.nospace ? 'text-green-400' : 'text-gray-400'}>• Pas d&apos;espace</li>
               </ul>
             </div>
 
