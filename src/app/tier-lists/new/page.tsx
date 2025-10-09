@@ -36,6 +36,11 @@ export default function CreateTierListPage() {
   const [skinsMeta, setSkinsMeta] = React.useState<{ url: string; name: string; splash?: string }[]>([]);
   const [selectedSkin, setSelectedSkin] = React.useState<{ url: string; name: string; splash?: string } | null>(null);
   const lastFocusRef = React.useRef<HTMLElement | null>(null);
+
+  // Pointer tracking to éviter l'ouverture de la modal pendant un drag
+  const startPosRef = React.useRef<{ x: number; y: number } | null>(null);
+  const draggingRef = React.useRef(false);
+
   const filteredChampions = React.useMemo(() => {
     if (!championQuery.trim()) return champions;
     const q = championQuery.toLowerCase();
@@ -179,7 +184,7 @@ export default function CreateTierListPage() {
                               onClick={() => { setChampionId(c.id); setChampionQuery(c.name); setOpenChampions(false); }}
                               className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-white/10 transition-colors ${c.id === championId ? 'bg-blue-600/30' : ''}`}
                             >
-                              <Image src={c.image} alt="" width={24} height={24} className="w-6 h-6 rounded object-cover" />
+                              <Image src={c.image} alt="" width={24} height={24} className="w-6 h-6 rounded object-cover" draggable={false} />
                               <span className="truncate">{c.name}</span>
                             </button>
                           </li>
@@ -200,13 +205,33 @@ export default function CreateTierListPage() {
             <Link href="/tier-lists" className="px-4 py-2 rounded bg-white/10 hover:bg-white/20 text-sm font-medium">Retour</Link>
           </div>
         </header>
-        <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-4 overflow-x-auto min-h-[200px]">
+        <div className="rounded-lg border border-white/10 bg-white/5 p-4 overflow-x-auto min-h-[200px]">
           <div
-            className="relative"
-            onClick={(e) => {
-              const target = e.target as HTMLElement;
-              if (target.tagName === 'IMG') {
-                const src = (target as HTMLImageElement).src;
+            className="relative dnd-fix"
+            // Tracking pour click vs drag (n'impacte pas la lib)
+            onMouseDown={(e) => {
+              const t = e.target as HTMLElement;
+              if (t.tagName === 'IMG') {
+                startPosRef.current = { x: e.clientX, y: e.clientY };
+                draggingRef.current = false;
+              } else {
+                startPosRef.current = null;
+              }
+            }}
+            onMouseMove={(e) => {
+              if (!startPosRef.current) return;
+              const dx = Math.abs(e.clientX - startPosRef.current.x);
+              const dy = Math.abs(e.clientY - startPosRef.current.y);
+              if (dx > 5 || dy > 5) draggingRef.current = true;
+            }}
+            onMouseUp={(e) => {
+              if (!startPosRef.current) return;
+              const t = e.target as HTMLElement;
+              const wasDragging = draggingRef.current;
+              startPosRef.current = null;
+              draggingRef.current = false;
+              if (t.tagName === 'IMG' && !wasDragging) {
+                const src = (t as HTMLImageElement).src;
                 const meta = skinsMeta.find(m => m.url === src || (m.url && src.endsWith(m.url.split('/').pop() || '')));
                 if (meta) {
                   lastFocusRef.current = document.activeElement as HTMLElement;
@@ -258,6 +283,7 @@ export default function CreateTierListPage() {
                     height={717}
                     className="max-h-[70vh] w-auto h-auto object-contain"
                     priority
+                    draggable={false}
                   />
                 </div>
                 <div className="md:w-64 p-4 space-y-4 flex flex-col">
