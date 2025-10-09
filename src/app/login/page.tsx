@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,10 +21,14 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      // Mock login
-      await new Promise(r => setTimeout(r, 600));
-      router.push('/profil');
+      const res = await signIn('credentials', { redirect: false, email, password });
+      if (res?.error) {
+        setError('Identifiants invalides');
+      } else {
+        router.push('/profil');
+      }
     } catch (err) {
+      console.error('Login error', err);
       setError('Connexion impossible');
     } finally {
       setLoading(false);

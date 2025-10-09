@@ -24,6 +24,9 @@ const nextConfig: NextConfig = {
         pathname: '/cdn/img/champion/splash/**'
       }
     ]
+  },
+  experimental: {
+    authInterrupts: true
   }
 };
 
