@@ -38,9 +38,6 @@ export default function ProfilPage() {
     }
   }
 
-  const myTierLists: Array<never> = [];
-  const likedTierLists: Array<never> = [];
-
   const initials = (user.username || user.email || 'U').slice(0, 2).toUpperCase();
 
   // In-page edit modal state
@@ -130,7 +127,7 @@ export default function ProfilPage() {
               <h2 className="text-xl font-semibold text-white">Mes likes</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <p className="text-sm text-gray-400">Tu n'as pas encore liké de tier list.</p>
+              <p className="text-sm text-gray-400">Tu n&apos;as pas encore liké de tier list.</p>
             </div>
           </Card>
         </div>

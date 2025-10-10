@@ -55,7 +55,7 @@ export const authOptions: NextAuthOptions = {
         if (dbUser && session.user) {
           session.user.name = dbUser.username ?? dbUser.name ?? session.user.name ?? dbUser.email.split('@')[0];
           session.user.email = dbUser.email;
-          session.user.image = dbUser.avatarUrl ?? session.user.image ?? null as any;
+          session.user.image = (dbUser.avatarUrl ?? session.user.image ?? null) as string | null;
           (session.user as unknown as { id?: string }).id = id;
         }
       }
