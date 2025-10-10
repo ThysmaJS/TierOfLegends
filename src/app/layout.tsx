@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header, Footer } from "../components/layout";
+import AuthProvider from "../components/auth/SessionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,11 +19,9 @@ export const metadata: Metadata = {
   description: "Créez et partagez vos tier lists des skins League of Legends. Classez vos skins favoris et découvrez les préférences de la communauté.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+type RootProps = { children: React.ReactNode };
+
+export default function RootLayout({ children }: RootProps) {
   return (
     <html lang="fr">
       <body
@@ -34,9 +33,11 @@ export default function RootLayout({
           <div className="absolute bottom-[-15%] right-[-5%] w-[55vw] h-[55vw] bg-gradient-to-tl from-fuchsia-500/20 via-indigo-700/10 to-transparent rounded-full blur-3xl" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.05),transparent_60%)]" />
         </div>
-        <Header />
-        <main className="flex-grow">{children}</main>
-        <Footer />
+        <AuthProvider>
+          <Header />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

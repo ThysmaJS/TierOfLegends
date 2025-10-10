@@ -1,8 +1,12 @@
 "use client";
 
 import Link from 'next/link';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function Header() {
+  const { data: session } = useSession();
+  const isAuthed = !!session;
+
   return (
     <header className="bg-gray-900 shadow-lg">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
@@ -27,32 +31,56 @@ export default function Header() {
                     Tier Lists
                   </Link>
                 </li>
-                <li>
-                  <Link className="text-gray-400 transition hover:text-white" href="/profil">
-                    Profil
-                  </Link>
-                </li>
+                {isAuthed && (
+                  <li>
+                    <Link className="text-gray-400 transition hover:text-white" href="/profil">
+                      Profil
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="sm:flex sm:gap-4">
-              <Link
-                className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-colors"
-                href="/login"
-              >
-                Se connecter
-              </Link>
+              {!isAuthed ? (
+                <>
+                  <Link
+                    className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-colors"
+                    href="/login"
+                  >
+                    Se connecter
+                  </Link>
 
-              <div className="hidden sm:flex">
-                <Link
-                  className="rounded-md bg-gray-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-                  href="/register"
-                >
-                  S&apos;inscrire   
-                </Link>
-              </div>
+                  <div className="hidden sm:flex">
+                    <Link
+                      className="rounded-md bg-gray-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+                      href="/register"
+                    >
+                      S&apos;inscrire   
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Link
+                    className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-colors"
+                    href="/profil"
+                  >
+                    Profil
+                  </Link>
+
+                  <div className="hidden sm:flex">
+                    <button
+                      onClick={() => signOut({ callbackUrl: '/' })}
+                      className="rounded-md bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                    >
+                      Se déconnecter
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="block md:hidden">

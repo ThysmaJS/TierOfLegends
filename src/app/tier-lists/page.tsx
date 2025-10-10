@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { TierListCard } from '@/components/tierlist';
+import { auth } from '@/auth';
 
 interface TierListPreview {
   id: string;
@@ -50,7 +51,9 @@ const tierLists: TierListPreview[] = [
   }
 ].sort((a,b)=> b.views - a.views);
 
-export default function TierListPage() {
+export default async function TierListPage() {
+  const session = await auth();
+  const isAuthed = !!session;
   return (
     <div className="min-h-screen py-12">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
@@ -65,9 +68,11 @@ export default function TierListPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            <Link href="/tier-lists/new" className="inline-flex items-center px-5 py-3 rounded-lg bg-blue-600 text-white text-sm font-medium shadow hover:bg-blue-700 transition-colors">
-              + Créer une Tier List
-            </Link>
+            {isAuthed && (
+              <Link href="/tier-lists/new" className="inline-flex items-center px-5 py-3 rounded-lg bg-blue-600 text-white text-sm font-medium shadow hover:bg-blue-700 transition-colors">
+                + Créer une Tier List
+              </Link>
+            )}
           </div>
         </div>
 

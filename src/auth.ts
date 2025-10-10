@@ -2,6 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { getCollection } from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
+import { getServerSession } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -25,3 +26,7 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   pages: { signIn: "/login" }
 };
+
+export function auth() {
+  return getServerSession(authOptions);
+}
