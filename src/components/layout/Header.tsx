@@ -2,10 +2,16 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
+import { Avatar } from '../ui';
 
 export default function Header() {
   const { data: session } = useSession();
   const isAuthed = !!session;
+
+  const username = session?.user?.name || '';
+  const email = session?.user?.email || '';
+  const image = (session?.user?.image as string) || '';
+  const initials = (username || email || 'U').slice(0, 2).toUpperCase();
 
   return (
     <header className="bg-gray-900 shadow-lg">
@@ -43,7 +49,7 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="sm:flex sm:gap-4">
+            <div className="hidden sm:flex sm:gap-4 items-center">
               {!isAuthed ? (
                 <>
                   <Link
@@ -53,37 +59,36 @@ export default function Header() {
                     Se connecter
                   </Link>
 
-                  <div className="hidden sm:flex">
-                    <Link
-                      className="rounded-md bg-gray-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-                      href="/register"
-                    >
-                      S&apos;inscrire   
-                    </Link>
-                  </div>
+                  <Link
+                    className="rounded-md bg-gray-800 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+                    href="/register"
+                  >
+                    S&apos;inscrire   
+                  </Link>
                 </>
               ) : (
                 <>
-                  <Link
-                    className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-colors"
-                    href="/profil"
-                  >
-                    Profil
+                  <Link href="/profil" className="flex items-center">
+                    <Avatar initials={initials} imageUrl={image} size="sm" />
                   </Link>
 
-                  <div className="hidden sm:flex">
-                    <button
-                      onClick={() => signOut({ callbackUrl: '/' })}
-                      className="rounded-md bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors"
-                    >
-                      Se déconnecter
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                    className="rounded-md bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                  >
+                    Se déconnecter
+                  </button>
                 </>
               )}
             </div>
 
-            <div className="block md:hidden">
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center gap-3">
+              {isAuthed && (
+                <Link href="/profil" className="flex items-center">
+                  <Avatar initials={initials} imageUrl={image} size="sm" />
+                </Link>
+              )}
               <button
                 className="rounded-sm bg-gray-800 p-2 text-gray-400 transition hover:text-white"
               >

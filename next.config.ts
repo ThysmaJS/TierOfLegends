@@ -27,6 +27,15 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     authInterrupts: true
+  },
+  async redirects() {
+    return [
+      {
+        source: '/profil/edit',
+        destination: '/profil',
+        permanent: true,
+      },
+    ];
   }
 };
 
