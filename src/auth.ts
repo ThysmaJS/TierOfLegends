@@ -42,7 +42,6 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.name = user.name ?? token.name;
         token.email = user.email ?? token.email;
-        // token.sub is set automatically to user id
         (token as { picture?: string }).picture = (user as { image?: string }).image;
       }
       return token;
