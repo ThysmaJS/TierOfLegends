@@ -27,12 +27,12 @@ function LoginContent() {
   React.useEffect(() => {
     const rawCb = sp.get('callbackUrl');
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const safe = sanitizeCallbackUrl(rawCb, origin || '');
-    // ensure absolute URL for signIn redirect handling safety
-    const abs = (() => {
-      try { return new URL(safe, origin).toString(); } catch { return origin + '/'; }
-    })();
-    setCallbackUrl(abs);
+    try {
+      const safePath = sanitizeCallbackUrl(rawCb, origin || '');
+      setCallbackUrl(safePath || '/');
+    } catch {
+      setCallbackUrl('/');
+    }
   }, [sp]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -44,7 +44,9 @@ function LoginContent() {
     }
     setLoading(true);
     try {
-      const res = await signIn('credentials', { redirect: false, email, password, callbackUrl });
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const absoluteCb = origin ? new URL(callbackUrl || '/', origin).toString() : callbackUrl || '/';
+      const res = await signIn('credentials', { redirect: false, email, password, callbackUrl: absoluteCb });
       if (res?.error) {
         setError('Identifiants invalides');
       } else {
