@@ -6,6 +6,7 @@ export default withAuth({
 
 export const config = {
   matcher: [
+    // Protect only private routes
     '/profil/:path*',
     '/tier-lists/new/:path*',
   ],

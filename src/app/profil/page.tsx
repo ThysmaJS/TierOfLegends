@@ -2,7 +2,6 @@
 
 import { useSession } from 'next-auth/react';
 import { Avatar, Button, Card, Container, Modal } from '../../components';
-import Link from 'next/link';
 import React from 'react';
 
 export default function ProfilPage() {

@@ -23,7 +23,7 @@ type RootProps = { children: React.ReactNode };
 
 export default function RootLayout({ children }: RootProps) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-gray-900 text-white relative`}
       >

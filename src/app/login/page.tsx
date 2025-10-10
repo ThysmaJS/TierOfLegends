@@ -2,7 +2,7 @@
 
 import React, { Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { sanitizeCallbackUrl } from '@/lib/safeRedirect';
 
@@ -16,16 +16,24 @@ export default function LoginPage() {
 
 function LoginContent() {
   const sp = useSearchParams();
+  const router = useRouter();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const rawCb = sp.get('callbackUrl');
-  const callbackUrl = React.useMemo(() => {
-    if (typeof window === 'undefined') return '/';
-    return sanitizeCallbackUrl(rawCb, window.location.origin);
-  }, [rawCb]);
+  const [callbackUrl, setCallbackUrl] = React.useState<string>('/');
+
+  React.useEffect(() => {
+    const rawCb = sp.get('callbackUrl');
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const safe = sanitizeCallbackUrl(rawCb, origin || '');
+    // ensure absolute URL for signIn redirect handling safety
+    const abs = (() => {
+      try { return new URL(safe, origin).toString(); } catch { return origin + '/'; }
+    })();
+    setCallbackUrl(abs);
+  }, [sp]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,9 +44,11 @@ function LoginContent() {
     }
     setLoading(true);
     try {
-      const res = await signIn('credentials', { redirect: true, email, password, callbackUrl });
+      const res = await signIn('credentials', { redirect: false, email, password, callbackUrl });
       if (res?.error) {
         setError('Identifiants invalides');
+      } else {
+        router.push(callbackUrl || '/');
       }
     } catch (err) {
       console.error('Login error', err);
