@@ -1,13 +1,20 @@
 "use client";
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { sanitizeCallbackUrl } from '@/lib/safeRedirect';
 
 export default function LoginPage() {
-  const router = useRouter();
+  return (
+    <Suspense fallback={<div className="min-h-screen py-12" />}> 
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const sp = useSearchParams();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
