@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth";
 import { sanitizeCallbackUrl } from "@/lib/safeRedirect";
 import type { ObjectId } from 'mongodb';
 
-const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+const secret = process.env.NEXTAUTH_SECRET;
 
 type UserDb = { _id: ObjectId; email: string; passwordHash: string; username?: string; avatarUrl?: string; name?: string };
 
@@ -42,6 +42,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.name = user.name ?? token.name;
         token.email = user.email ?? token.email;
+        // token.sub is set automatically to user id
         (token as { picture?: string }).picture = (user as { image?: string }).image;
       }
       return token;
@@ -61,9 +62,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      const safe = sanitizeCallbackUrl(url, baseUrl);
-      // return absolute URL for NextAuth
-      try { return new URL(safe, baseUrl).toString(); } catch { return baseUrl; }
+      return sanitizeCallbackUrl(url, baseUrl);
     },
   },
   debug: process.env.NODE_ENV === 'development',
