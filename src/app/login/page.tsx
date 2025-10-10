@@ -2,15 +2,23 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { sanitizeCallbackUrl } from '@/lib/safeRedirect';
 
 export default function LoginPage() {
   const router = useRouter();
+  const sp = useSearchParams();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  const rawCb = sp.get('callbackUrl');
+  const callbackUrl = React.useMemo(() => {
+    if (typeof window === 'undefined') return '/';
+    return sanitizeCallbackUrl(rawCb, window.location.origin);
+  }, [rawCb]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,11 +29,9 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const res = await signIn('credentials', { redirect: false, email, password });
+      const res = await signIn('credentials', { redirect: true, email, password, callbackUrl });
       if (res?.error) {
         setError('Identifiants invalides');
-      } else {
-        router.push('/profil');
       }
     } catch (err) {
       console.error('Login error', err);

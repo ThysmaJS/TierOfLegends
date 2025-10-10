@@ -3,8 +3,12 @@ import Credentials from "next-auth/providers/credentials";
 import { getCollection } from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
+import { sanitizeCallbackUrl } from "@/lib/safeRedirect";
+
+const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
 
 export const authOptions: NextAuthOptions = {
+  secret,
   providers: [
     Credentials({
       name: "Credentials",
@@ -24,7 +28,13 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   session: { strategy: "jwt" },
-  pages: { signIn: "/login" }
+  pages: { signIn: "/login" },
+  callbacks: {
+    async redirect({ url, baseUrl }) {
+      return sanitizeCallbackUrl(url, baseUrl);
+    },
+  },
+  debug: process.env.NODE_ENV === 'development',
 };
 
 export function auth() {
