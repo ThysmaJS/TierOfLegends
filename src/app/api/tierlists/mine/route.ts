@@ -21,7 +21,7 @@ export async function GET() {
       updatedAt: d.updatedAt.toISOString(),
     }));
     return Response.json({ tierlists: data });
-  } catch (err) {
+  } catch {
     return new Response('Erreur serveur', { status: 500 });
   }
 }
