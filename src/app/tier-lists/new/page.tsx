@@ -141,10 +141,10 @@ export default function CreateTierListPage() {
         return;
       }
       if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error ? JSON.stringify(j.error) : 'Erreur lors de la sauvegarde');
+        const errJson = await res.json().catch(() => ({} as { error?: unknown }));
+        throw new Error(errJson.error ? JSON.stringify(errJson.error) : 'Erreur lors de la sauvegarde');
       }
-      const j = await res.json();
+      await res.json();
       // Redirige vers le profil après succès
       router.push('/profil');
     } catch (e) {

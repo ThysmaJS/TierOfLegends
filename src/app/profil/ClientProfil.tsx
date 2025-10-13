@@ -4,7 +4,9 @@ import { useSession } from 'next-auth/react';
 import { Avatar, Button, Card, Container, Modal } from '../../components';
 import { TierListCard } from '@/components/tierlist';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import React from 'react';
+import type { TierListPublic } from '@/types/tierlist';
 
 export default function ClientProfil() {
   const { data: session, update } = useSession();
@@ -51,8 +53,16 @@ export default function ClientProfil() {
         setLoadingMine(true);
         const res = await fetch('/api/tierlists/mine');
         if (!res.ok) return;
-  const j = await res.json();
-  if (!cancelled) setMine(j.tierlists?.map((t: any) => ({ id: t.id, title: t.title, updatedAt: t.updatedAt, championId: t.championId })) ?? []);
+        const j: { tierlists?: TierListPublic[] } = await res.json();
+        if (!cancelled) {
+          const mapped = (j.tierlists ?? []).map(t => ({
+            id: t.id,
+            title: t.title,
+            updatedAt: t.updatedAt,
+            championId: t.championId,
+          }));
+          setMine(mapped);
+        }
       } finally {
         if (!cancelled) setLoadingMine(false);
       }
@@ -135,7 +145,7 @@ export default function ClientProfil() {
           <Card className="bg-white/5 border border-white/10">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-white">Mes Tier Lists</h2>
-              <a href="/tier-lists/new"><Button>+ Nouvelle Tier List</Button></a>
+              <Link href="/tier-lists/new"><Button>+ Nouvelle Tier List</Button></Link>
             </div>
             {loadingMine ? (
               <p className="text-sm text-gray-400">Chargement…</p>
