@@ -1,24 +1,3 @@
-import { withAuth } from 'next-auth/middleware';
-
-export default withAuth({
-  pages: { signIn: '/login' },
-  callbacks: {
-    // Autorise l'accès si un token (JWT) est présent, avec fallback basé sur la présence du cookie de session
-    authorized: ({ token, req }) => {
-      if (token) return true;
-      try {
-        const cookie = req.cookies.get('__Secure-next-auth.session-token') || req.cookies.get('next-auth.session-token');
-        return !!cookie;
-      } catch {
-        return false;
-      }
-    },
-  },
-});
-
-export const config = {
-  matcher: [
-    // Protect only private routes
-    '/tier-lists/new/:path*',
-  ],
-};
+// Middleware is intentionally disabled for /tier-lists/new.
+// We rely on SSR guard for /profil and API route guards (401) for write actions.
+export { }

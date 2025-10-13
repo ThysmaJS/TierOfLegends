@@ -2,6 +2,11 @@ import { auth } from '@/auth';
 import { getCollection } from '@/lib/mongodb';
 import { z } from 'zod';
 import type { TierListDoc } from '@/types/tierlist';
+import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const createSchema = z.object({
   title: z.string().trim().min(1).max(120),
@@ -28,16 +33,18 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session || !session.user?.email) return new Response('Unauthorized', { status: 401 });
+    // Prefer JWT token lookup for reliability on Vercel
+    const token = await getToken({ req });
+    const email = (token?.email as string | undefined) || (await auth())?.user?.email || undefined;
+    if (!email) return new Response('Unauthorized', { status: 401 });
     const body = await req.json();
     const parsed = createSchema.safeParse(body);
     if (!parsed.success) return Response.json({ error: parsed.error.flatten() }, { status: 400 });
 
     const colUsers = await getCollection<{ _id: import('mongodb').ObjectId; email: string }>('users');
-    const dbUser = await colUsers.findOne({ email: session.user.email.toLowerCase() });
+    const dbUser = await colUsers.findOne({ email: email.toLowerCase() });
     if (!dbUser) return new Response('Unauthorized', { status: 401 });
 
     const now = new Date();
