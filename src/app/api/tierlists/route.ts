@@ -23,7 +23,7 @@ export async function GET() {
       updatedAt: d.updatedAt.toISOString(),
     }));
     return Response.json({ tierlists: data });
-  } catch (err) {
+  } catch {
     return new Response('Erreur serveur', { status: 500 });
   }
 }
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     } as unknown as TierListDoc);
 
     return Response.json({ id: insert.insertedId.toString() }, { status: 201 });
-  } catch (err) {
+  } catch {
     return new Response('Erreur serveur', { status: 500 });
   }
 }
