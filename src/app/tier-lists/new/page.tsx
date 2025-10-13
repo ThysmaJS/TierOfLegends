@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { TierListMaker, type Tier } from 'react-tierlist';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const BASE_TIERS = ['S', 'A', 'B', 'C', 'D'];
 
@@ -23,6 +24,7 @@ interface ApiChampionDetailsSkin { loading: string; splash?: string; name: strin
 interface ApiChampionDetails { skins: ApiChampionDetailsSkin[] }
 
 export default function CreateTierListPage() {
+  const router = useRouter();
   const [championId, setChampionId] = React.useState('');
   const [tiers, setTiers] = React.useState<Tier[]>([]);
   const [title, setTitle] = React.useState('Nouvelle Tier List');
@@ -123,10 +125,32 @@ export default function CreateTierListPage() {
     });
   }
 
-  function handleSave() {
-    // mock save
-    console.log('SAVE_TIER_LIST', { championId, title, tiers });
-    alert('Tier List sauvegardée (mock) – voir console');
+  async function handleSave() {
+    try {
+      if (!championId || tiers.length === 0 || !title.trim()) {
+        alert('Renseigne le titre et choisis un champion.');
+        return;
+      }
+      const res = await fetch('/api/tierlists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title.trim(), championId, tiers }),
+      });
+      if (res.status === 401) {
+        router.push('/login?callbackUrl=%2Ftier-lists%2Fnew');
+        return;
+      }
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error ? JSON.stringify(j.error) : 'Erreur lors de la sauvegarde');
+      }
+      const j = await res.json();
+      // Redirige vers le profil après succès
+      router.push('/profil');
+    } catch (e) {
+      console.error(e);
+      alert(e instanceof Error ? e.message : 'Erreur inconnue');
+    }
   }
 
   return (

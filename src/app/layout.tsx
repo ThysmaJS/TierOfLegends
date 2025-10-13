@@ -24,7 +24,7 @@ type RootProps = { children: React.ReactNode };
 export default function RootLayout({ children }: RootProps) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body
+      <body suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-gray-900 text-white relative`}
       >
         {/* Global decorative background (subtle gradients) */}

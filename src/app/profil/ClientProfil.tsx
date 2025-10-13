@@ -2,11 +2,16 @@
 
 import { useSession } from 'next-auth/react';
 import { Avatar, Button, Card, Container, Modal } from '../../components';
+import { TierListCard } from '@/components/tierlist';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 
 export default function ClientProfil() {
   const { data: session, update } = useSession();
   const [localPreview, setLocalPreview] = React.useState<string | null>(null);
+  const [mine, setMine] = React.useState<Array<{ id: string; title: string; updatedAt: string; championId?: string }>>([]);
+  const [loadingMine, setLoadingMine] = React.useState(false);
+  const router = useRouter();
 
   const user = {
     username: session?.user?.name ?? '',
@@ -38,6 +43,23 @@ export default function ClientProfil() {
   }
 
   const initials = (user.username || user.email || 'U').slice(0, 2).toUpperCase();
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function loadMine() {
+      try {
+        setLoadingMine(true);
+        const res = await fetch('/api/tierlists/mine');
+        if (!res.ok) return;
+  const j = await res.json();
+  if (!cancelled) setMine(j.tierlists?.map((t: any) => ({ id: t.id, title: t.title, updatedAt: t.updatedAt, championId: t.championId })) ?? []);
+      } finally {
+        if (!cancelled) setLoadingMine(false);
+      }
+    }
+    loadMine();
+    return () => { cancelled = true; };
+  }, []);
 
   // In-page edit modal state
   const [editOpen, setEditOpen] = React.useState(false);
@@ -115,9 +137,34 @@ export default function ClientProfil() {
               <h2 className="text-xl font-semibold text-white">Mes Tier Lists</h2>
               <a href="/tier-lists/new"><Button>+ Nouvelle Tier List</Button></a>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {loadingMine ? (
+              <p className="text-sm text-gray-400">Chargement…</p>
+            ) : mine.length === 0 ? (
               <p className="text-sm text-gray-400">Aucune tier list créée pour le moment.</p>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {mine.map(t => (
+                  <TierListCard
+                    key={t.id}
+                    id={t.id}
+                    title={t.title}
+                    description={`MAJ ${new Date(t.updatedAt).toLocaleDateString()}`}
+                    views={0}
+                    likes={0}
+                    gradientFrom="from-blue-600"
+                    gradientTo="to-purple-500"
+                    previewText={(t.championId || 'TL').slice(0,4).toUpperCase()}
+                    championId={t.championId || 'Ahri'}
+                    onEdit={() => router.push(`/tier-lists/${t.id}`)}
+                    onDelete={async () => {
+                      if (!confirm('Supprimer cette tier list ?')) return;
+                      const res = await fetch(`/api/tierlists/${t.id}`, { method: 'DELETE' });
+                      if (res.ok) setMine(prev => prev.filter(x => x.id !== t.id));
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </Card>
 
           {/* Tier Lists likées */}

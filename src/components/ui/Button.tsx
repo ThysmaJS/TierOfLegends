@@ -2,7 +2,7 @@
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
@@ -20,7 +20,8 @@ export default function Button({
     primary: 'bg-blue-600 text-white hover:bg-blue-500',
     secondary: 'bg-white/10 text-white hover:bg-white/20',
     outline: 'border border-white/20 text-white hover:bg-white/10',
-    ghost: 'text-gray-300 hover:bg-white/10'
+    ghost: 'text-gray-300 hover:bg-white/10',
+    danger: 'bg-red-600 text-white hover:bg-red-500'
   } as const;
 
   const sizeClasses = {

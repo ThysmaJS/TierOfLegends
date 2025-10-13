@@ -1,59 +1,30 @@
 import Link from 'next/link';
 import { TierListCard } from '@/components/tierlist';
 import { auth } from '@/auth';
+import { getCollection } from '@/lib/mongodb';
+import type { TierListDoc } from '@/types/tierlist';
 
-interface TierListPreview {
-  id: string;
-  title: string;
-  description: string;
-  views: number;
-  likes: number;
-  gradientFrom: string;
-  gradientTo: string;
-  previewText: string;
-  updatedAt: string;
+async function getTierLists() {
+  const col = await getCollection<TierListDoc>('tierlists');
+  const docs = await col.find({}, { sort: { updatedAt: -1 }, limit: 60 }).toArray();
+  return docs.map(d => ({
+    id: d._id.toString(),
+    title: d.title,
+    championId: d.championId,
+    description: `${d.tiers[0]?.items.length ?? 0} items classés`,
+    views: d.views ?? 0,
+    likes: d.likes ?? 0,
+    gradientFrom: 'from-blue-600',
+    gradientTo: 'to-purple-500',
+    previewText: (d.championId || 'TL').slice(0,4).toUpperCase(),
+    updatedAt: d.updatedAt.toISOString(),
+  }));
 }
-
-// Mock local (remplacer plus tard par appel DB / API route)
-const tierLists: TierListPreview[] = [
-  {
-    id: 'tl1',
-    title: 'Skins Ahri Préférés',
-    description: 'Classement personnel des skins Ahri',
-    views: 1280,
-    likes: 340,
-    gradientFrom: 'from-purple-600',
-    gradientTo: 'to-pink-500',
-    previewText: 'AHRI',
-    updatedAt: '2025-10-01'
-  },
-  {
-    id: 'tl2',
-    title: 'Lux Élémentaliste Meta',
-    description: 'Feeling et animations en jeu',
-    views: 860,
-    likes: 210,
-    gradientFrom: 'from-yellow-400',
-    gradientTo: 'to-pink-400',
-    previewText: 'LUX',
-    updatedAt: '2025-09-28'
-  },
-  {
-    id: 'tl3',
-    title: 'Yasuo Style Ranking',
-    description: 'Style & fluidité des animations',
-    views: 640,
-    likes: 150,
-    gradientFrom: 'from-gray-700',
-    gradientTo: 'to-indigo-500',
-    previewText: 'YASU',
-    updatedAt: '2025-09-20'
-  }
-].sort((a,b)=> b.views - a.views);
 
 export default async function TierListPage() {
   const session = await auth();
   const isAuthed = !!session;
+  const tierLists = await getTierLists();
   return (
     <div className="min-h-screen py-12">
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
@@ -97,6 +68,7 @@ export default async function TierListPage() {
           {tierLists.map(tl => (
             <TierListCard
               key={tl.id}
+              id={tl.id}
               title={tl.title}
               description={tl.description}
               views={tl.views}
@@ -104,6 +76,8 @@ export default async function TierListPage() {
               gradientFrom={tl.gradientFrom}
               gradientTo={tl.gradientTo}
               previewText={tl.previewText}
+              championId={tl.championId}
+              hideActions
             />
           ))}
         </div>
