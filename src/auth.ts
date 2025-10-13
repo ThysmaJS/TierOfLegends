@@ -61,7 +61,16 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      return sanitizeCallbackUrl(url, baseUrl);
+      // Sanitize to an internal path, then always return an absolute URL as required by NextAuth
+      const safePath = sanitizeCallbackUrl(url, baseUrl);
+      try {
+        // Ensure baseUrl is absolute (expected format: https://host[:port])
+        const isAbs = /^https?:\/\//i.test(baseUrl);
+        if (!isAbs) return '/';
+        return new URL(safePath || '/', baseUrl).toString();
+      } catch {
+        return baseUrl;
+      }
     },
   },
   debug: process.env.NODE_ENV === 'development',
