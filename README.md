@@ -1,84 +1,147 @@
 # Tier of Legends 🏆
 
-Bienvenue sur **Tier of Legends**, une application web interactive permettant de créer et partager des tier lists des skins de League of Legends !
+Plateforme Next.js (FR) pour créer, classer et partager des tier lists autour de League of Legends: skins de champions, objets, sorts d’invocateur et runes.
 
-## 🎮 Description du projet
+## ✨ Aperçu
 
-Tier of Legends est une plateforme web développée avec Next.js qui permet aux joueurs de League of Legends de :
+- Crée des tier lists avec drag & drop (tiers S à E)
+- Catégories disponibles: skins par champion, items (filtres type/mode), summoner spells, runes (keystones)
+- Sauvegarde en base (MongoDB), profil utilisateur (avatar, email, pseudo), routes protégées
+- Données Riot Data Dragon en français (images optimisées via `next/image`), cache de données Next.js
+- Recherche côté client (Redux Toolkit), pages SEO (robots, sitemap), i18n FR
+- Tests end-to-end avec Playwright (smoke test fourni)
 
-- **Créer des tier lists** personnalisées des skins de leurs champions favoris
-- **Classer les skins** selon leurs préférences (S, A, B, C, D tiers)
-- **Explorer** tous les skins disponibles grâce à l'API officielle de Riot Games
-- **Partager** leurs tier lists avec la communauté
+## 🧱 Stack technique
 
-## 🚀 Technologies utilisées
+- Next.js 15 (App Router) + React 18 + TypeScript
+- Tailwind CSS v4
+- NextAuth (authentification credentials/JWT)
+- MongoDB Node Driver (connexion server-only)
+- Redux Toolkit + React-Redux (état UI: filtres)
+- Zod (validation des payloads API)
+- Playwright (tests e2e)
 
-- **Next.js 15** - Framework React pour le développement web
-- **TypeScript** - Pour un code plus robuste et maintenable
-- **Tailwind CSS** - Framework CSS pour un design moderne
-- **Riot Games API** - Pour récupérer les données officielles des champions et skins
+## 📂 Structure (extrait)
 
-## 📋 Prérequis
-
-Avant de commencer, assurez-vous d'avoir installé :
-
-- Node.js (version 18 ou supérieure)
-- npm, yarn, pnpm ou bun
-
-## ⚡ Installation et lancement
-
-1. **Clonez le repository** :
-```bash
-git clone <votre-repo-url>
-cd tier-of-legends
+```
+src/
+  app/
+    (pages)…
+    api/
+      champions/         # /api/champions, /api/champions/[id]
+      categories/        # /api/categories/[category]
+      tierlists/         # /api/tierlists (+ [id], mine)
+      profile/           # /api/profile (+ avatar, email)
+      auth/[...nextauth] # NextAuth
+    a-propos/
+    error.tsx           # error boundary
+    not-found.tsx       # 404
+    robots.ts / sitemap.ts
+  components/
+  lib/riot.ts           # accès DDragon + wrappers de cache
+  lib/mongodb.ts        # helper MongoDB (server-only)
+  i18n/
+  store/                # Redux
+middleware.ts           # protection /profil, /tier-lists/new
 ```
 
-2. **Installez les dépendances** :
+## 🔐 Variables d’environnement
+
+Voir `.env.example` et créer un `.env.local` (non versionné). Minimum:
+
+- `NEXTAUTH_URL` — URL du site (ex: http://localhost:3000)
+- `NEXTAUTH_SECRET` — secret NextAuth (ex: `openssl rand -base64 32`)
+- `MONGODB_URI` — connexion MongoDB (Atlas recommandé)
+
+Les `.env*` sont gitignorés.
+
+## 🚀 Démarrage
+
+1) Installer les dépendances
+
 ```bash
 npm install
-# ou
-yarn install
-# ou
-pnpm install
 ```
 
-3. **Lancez le serveur de développement** :
+2) Lancer en dev
+
 ```bash
 npm run dev
-# ou
-yarn dev
-# ou
-pnpm dev
-# ou
-bun dev
 ```
 
-4. **Ouvrez votre navigateur** et accédez à [http://localhost:3000](http://localhost:3000)
+3) Build prod puis start
 
-## 🔗 API Reference
+```bash
+npm run build
+npm run start
+```
 
-Ce projet utilise l'API officielle de Riot Games pour récupérer les données des champions et skins :
+Scripts utiles:
 
-- **Documentation officielle** : [https://developer.riotgames.com/docs/lol](https://developer.riotgames.com/docs/lol)
-- **Endpoints utilisés** :
-  - Champions : `/lol/static-data/v3/champions`
-  - Skins : Données intégrées dans les informations des champions
-- **Endpoints complet** :
-  - Liste des champions: GET https://ddragon.leagueoflegends.com/cdn/15.20.1/data/en_US/champion.json
-  - Liste d'un champion en particulier : GET https://ddragon.leagueoflegends.com/cdn/15.20.1/data/en_US/champion/Alistar.json
+- `npm run lint` — ESLint
+- `npm run clean` — supprime `.next/`
+- `npm run dev:turbo` — dev avec Turbopack
 
-## 🎨 Fonctionnalités
+## 🧪 Tests (Playwright)
 
-- [ ] Affichage de tous les champions League of Legends
-- [ ] Visualisation des skins de chaque champion
-- [ ] Interface drag & drop pour créer des tier lists
-- [ ] Sauvegarde locale des tier lists
-- [ ] Partage des tier lists créées
+1) Installer les navigateurs Playwright (une fois):
 
-## 🤝 Contribution
+```bash
+npx playwright install
+```
 
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou proposer une pull request.
+2) Lancer l’app puis les tests:
 
-## 📄 License
+```bash
+npm run dev
+npm run test:e2e:headed
+```
 
-Ce projet est développé dans un cadre éducatif. Les assets et données League of Legends appartiennent à Riot Games.
+Autres scripts: `test:e2e`, `test:e2e:ui`. Pour une URL différente: `PLAYWRIGHT_BASE_URL`.
+
+## 🗄️ Base de données
+
+- MongoDB (Atlas). Connexion côté serveur (server-only) via `src/lib/mongodb.ts`.
+- Création de comptes: `/api/register` (Zod + messages d’erreurs structurés).
+- Tier lists: CRUD via `/api/tierlists` (création validée par Zod, erreurs propres).
+- Profil: `/api/profile` (pseudo, avatarUrl), `/api/profile/email`, `/api/profile/avatar`.
+
+## 🔌 API interne (exemples)
+
+- `GET /api/champions` — liste (fr_FR)
+- `GET /api/champions/[id]` — détails + skins (fr_FR)
+- `GET /api/categories/[category]` — items/spells/runes/skins deck
+  - Query items: `type=final|component|boots|consumable|trinket`, `map=sr|aram`
+- `GET /api/tierlists` — global
+- `POST /api/tierlists` — création (auth requise, Zod; erreurs `{ fieldErrors, formErrors }`)
+- `GET /api/tierlists/mine` — mes listes (auth)
+
+## ⚡ Cache & images
+
+- DDragon encapsulé dans `src/lib/riot.ts` avec wrappers `unstable_cache` (revalidate ~1h, tags: `ddragon:*`).
+- Homepage revalidate: 10 minutes.
+- Images `next/image` avec remote patterns autorisés.
+
+## 🔒 Auth & sécurité
+
+- NextAuth (credentials + JWT). Extraction du token côté API (fiable en prod / Vercel).
+- Middleware protège `/profil` et `/tier-lists/new` (redirige vers `/login?next=…`).
+- Secrets et connexion DB non exposés au client.
+
+## 🌐 SEO & i18n
+
+- `robots.txt`, `sitemap.xml`, 404 personnalisée; `<html lang="fr">`.
+- Dictionnaire i18n FR (`src/i18n/dictionaries/fr.json`) + helper (`getDictionary`).
+
+## 🧭 Fonctionnalités principales
+
+- Drag & drop (react-tierlist), tiers S→E
+- Catégories basées sur DDragon (FR): skins, items (filtres), spells, runes
+- Modales d’infos (objets/sorts/runes), images HQ (splash/loading)
+- Recherche client (Redux) sur la page listing
+- Erreurs formulaires propres (inline + bandeau) grâce aux retours Zod
+
+## 📦 Déploiement
+
+- Vercel recommandé. Définir `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `MONGODB_URI` dans les variables du projet.
+- Certaines routes nécessitent runtime Node (App Router par défaut pour handlers).
