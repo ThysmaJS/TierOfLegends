@@ -9,7 +9,7 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
-    const champ = await getChampionDetails(id, 'en_US');
+  const champ = await getChampionDetails(id, 'fr_FR');
     return NextResponse.json(champ);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed';

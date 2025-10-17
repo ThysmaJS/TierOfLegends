@@ -6,7 +6,15 @@ import { TierListMaker, type Tier } from 'react-tierlist';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-const BASE_TIERS = ['S', 'A', 'B', 'C', 'D'];
+const FIXED_TIERS = ['S', 'A', 'B', 'C', 'D', 'E'] as const;
+
+type Category = 'champion-skins' | 'items' | 'summoner-spells' | 'runes';
+const CATEGORY_OPTIONS: { key: Category; label: string }[] = [
+  { key: 'champion-skins', label: 'Skins d\'un champion' },
+  { key: 'items', label: 'Objets' },
+  { key: 'summoner-spells', label: 'Sorts d\'invocateur' },
+  { key: 'runes', label: 'Runes (Keystones)' },
+];
 
 interface ChampionOption {
   id: string;
@@ -25,6 +33,7 @@ interface ApiChampionDetails { skins: ApiChampionDetailsSkin[] }
 
 export default function CreateTierListPage() {
   const router = useRouter();
+  const [category, setCategory] = React.useState<Category>('champion-skins');
   const [championId, setChampionId] = React.useState('');
   const [tiers, setTiers] = React.useState<Tier[]>([]);
   const [title, setTitle] = React.useState('Nouvelle Tier List');
@@ -35,9 +44,25 @@ export default function CreateTierListPage() {
   const [championQuery, setChampionQuery] = React.useState('');
   const [openChampions, setOpenChampions] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement | null>(null);
-  const [skinsMeta, setSkinsMeta] = React.useState<{ url: string; name: string; splash?: string }[]>([]);
-  const [selectedSkin, setSelectedSkin] = React.useState<{ url: string; name: string; splash?: string } | null>(null);
+  type ItemMeta = {
+    description?: string;
+    icon?: string;
+    id?: string;
+    gold?: { base: number; total: number; sell: number; purchasable?: boolean };
+    plaintext?: string;
+    stats?: Record<string, number>;
+    statsList?: string[];
+    tags?: string[];
+    shortDesc?: string;
+    longDesc?: string;
+  };
+  const [skinsMeta, setSkinsMeta] = React.useState<{ url: string; name: string; splash?: string; meta?: ItemMeta }[]>([]);
+  const [selectedSkin, setSelectedSkin] = React.useState<{ url: string; name: string; splash?: string; meta?: ItemMeta } | null>(null);
   const lastFocusRef = React.useRef<HTMLElement | null>(null);
+  const scrollYRef = React.useRef(0);
+  const [itemType, setItemType] = React.useState<'final' | 'component' | 'boots' | 'consumable' | 'trinket' | ''>('');
+  const [itemMap, setItemMap] = React.useState<'sr' | 'aram' | ''>('');
+  
 
   // Pointer tracking to éviter l'ouverture de la modal pendant un drag
   const startPosRef = React.useRef<{ x: number; y: number } | null>(null);
@@ -88,9 +113,46 @@ export default function CreateTierListPage() {
     loadChamps();
   }, []);
 
-  // Fetch skins when champion changes
+  // Initialize tiers/deck when category changes
+  React.useEffect(() => {
+    // reset selection and tiers scaffold
+    const emptyFixed = FIXED_TIERS.map(name => ({ name, items: [] as string[] }));
+    if (category === 'champion-skins') {
+      setTiers([...emptyFixed, { name: 'Deck', items: [] }]);
+    } else {
+      // fetch deck from category endpoint
+      (async () => {
+        try {
+          setLoadingSkins(true);
+          const qs = new URLSearchParams();
+          if (category === 'items') {
+            if (itemType) qs.set('type', itemType);
+            if (itemMap) qs.set('map', itemMap);
+          }
+          const url = `/api/categories/${category}${qs.toString() ? `?${qs.toString()}` : ''}`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('Erreur chargement catégorie');
+          const json: { items: Array<{ id: string; name: string; meta?: ItemMeta }> } = await res.json();
+          // For items/spells/runes, id is an image URL we can use directly for deck visuals
+          const deckItems = json.items.map(i => i.id);
+          setSkinsMeta(json.items.map(i => ({ url: i.id, name: i.name, splash: undefined, meta: i.meta })));
+          setTiers([...emptyFixed, { name: 'Deck', items: deckItems }]);
+          setChampionId('');
+          setSelectedSkin(null);
+        } catch (e) {
+          setError(e instanceof Error ? e.message : 'Erreur inconnue');
+          setTiers([...emptyFixed, { name: 'Deck', items: [] }]);
+        } finally {
+          setLoadingSkins(false);
+        }
+      })();
+    }
+  }, [category, champions, itemType, itemMap]);
+
+  // Fetch skins when champion changes (for champion-skins category)
   React.useEffect(() => {
     if (!championId) return;
+    if (category !== 'champion-skins') return;
     async function loadSkins() {
       try {
         setLoadingSkins(true);
@@ -100,7 +162,7 @@ export default function CreateTierListPage() {
         const deckItems: string[] = champ.skins.map(s => s.loading);
         setSkinsMeta(champ.skins.map(s => ({ url: s.loading, name: s.name, splash: s.splash })));
         setTiers([
-          ...BASE_TIERS.map(name => ({ name, items: [] as string[] })),
+          ...FIXED_TIERS.map(name => ({ name, items: [] as string[] })),
           { name: 'Deck', items: deckItems }
         ]);
       } catch (err: unknown) {
@@ -110,31 +172,54 @@ export default function CreateTierListPage() {
       }
     }
     loadSkins();
-  }, [championId]);
+  }, [championId, category]);
+
+  // (rarity category removed)
 
   function handleReset() {
-    if (!championId) return;
-    setChampionId(prev => prev);
-    setTiers(prev => {
-      const deck = prev.find(t => t.name === 'Deck');
-      const deckItems = deck ? deck.items : [];
-      return [
-        ...BASE_TIERS.map(name => ({ name, items: [] as string[] })),
-        { name: 'Deck', items: deckItems }
-      ];
-    });
+    if (category === 'champion-skins') {
+      setTiers(prev => {
+        const deck = prev.find(t => t.name === 'Deck');
+        const deckItems = deck ? deck.items : [];
+        return [
+          ...FIXED_TIERS.map(name => ({ name, items: [] as string[] })),
+          { name: 'Deck', items: deckItems }
+        ];
+      });
+    } else {
+      // refetch category items
+      const emptyFixed = FIXED_TIERS.map(name => ({ name, items: [] as string[] }));
+      (async () => {
+        try {
+          setLoadingSkins(true);
+          const res = await fetch(`/api/categories/${category}`);
+          if (!res.ok) throw new Error('Erreur chargement catégorie');
+          const json: { items: Array<{ id: string; name: string }> } = await res.json();
+          const deckItems = json.items.map(i => i.id);
+          setTiers([...emptyFixed, { name: 'Deck', items: deckItems }]);
+        } catch {
+          setTiers([...emptyFixed, { name: 'Deck', items: [] }]);
+        } finally {
+          setLoadingSkins(false);
+        }
+      })();
+    }
   }
 
   async function handleSave() {
     try {
-      if (!championId || tiers.length === 0 || !title.trim()) {
-        alert('Renseigne le titre et choisis un champion.');
+      if (!title.trim() || tiers.length === 0) {
+        alert('Renseigne le titre et prépare tes tiers.');
+        return;
+      }
+      if (category === 'champion-skins' && !championId) {
+        alert('Choisis un champion pour cette catégorie.');
         return;
       }
       const res = await fetch('/api/tierlists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title.trim(), championId, tiers }),
+        body: JSON.stringify({ title: title.trim(), category, championId: category === 'champion-skins' ? championId : undefined, tiers }),
       });
       if (res.status === 401) {
         router.push('/login?callbackUrl=%2Ftier-lists%2Fnew');
@@ -159,17 +244,30 @@ export default function CreateTierListPage() {
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold">Créer une Tier List</h1>
-            <p className="text-gray-300 text-sm">Sélectionne un champion, classe ses skins, puis sauvegarde.</p>
+            <p className="text-gray-300 text-sm">Choisis une catégorie, prépare tes tiers, puis sauvegarde.</p>
             <div className="flex flex-wrap gap-4 items-end">
+              <div>
+                <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Catégorie</label>
+                <select
+                  value={category}
+                  onChange={e => setCategory(e.target.value as Category)}
+                  className="bg-gray-900 text-gray-100 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                >
+                  {CATEGORY_OPTIONS.map(o => (
+                    <option key={o.key} value={o.key}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
               <div>
                 <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Titre</label>
                 <input
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  className="bg-white/10 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                  className="bg-gray-900 text-gray-100 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
                   placeholder="Titre de la tier list"
                 />
               </div>
+              {category === 'champion-skins' && (
               <div className="w-60">
                 <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Champion</label>
                 {loadingChampions ? (
@@ -221,6 +319,39 @@ export default function CreateTierListPage() {
                   </div>
                 )}
               </div>
+              )}
+              {category === 'items' && (
+                <>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Type d&apos;objet</label>
+                    <select
+                      value={itemType}
+                      onChange={e => setItemType(e.target.value as typeof itemType)}
+                      className="bg-gray-900 text-gray-100 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    >
+                      <option value="">Tous</option>
+                      <option value="final">Objets finaux</option>
+                      <option value="component">Composants</option>
+                      <option value="boots">Bottes</option>
+                      <option value="consumable">Consommables</option>
+                      <option value="trinket">Trinkets</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Mode de jeu</label>
+                    <select
+                      value={itemMap}
+                      onChange={e => setItemMap(e.target.value as typeof itemMap)}
+                      className="bg-gray-900 text-gray-100 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    >
+                      <option value="">Tous</option>
+                      <option value="sr">Faille de l&apos;invocateur</option>
+                      <option value="aram">ARAM</option>
+                    </select>
+                  </div>
+                </>
+              )}
+              
             </div>
           </div>
           <div className="flex gap-3">
@@ -235,7 +366,7 @@ export default function CreateTierListPage() {
             // Tracking pour click vs drag (n'impacte pas la lib)
             onMouseDown={(e) => {
               const t = e.target as HTMLElement;
-              if (t.tagName === 'IMG') {
+              if ((category === 'champion-skins' || category === 'items' || category === 'summoner-spells' || category === 'runes') && t.tagName === 'IMG') {
                 startPosRef.current = { x: e.clientX, y: e.clientY };
                 draggingRef.current = false;
               } else {
@@ -254,11 +385,20 @@ export default function CreateTierListPage() {
               const wasDragging = draggingRef.current;
               startPosRef.current = null;
               draggingRef.current = false;
-              if (t.tagName === 'IMG' && !wasDragging) {
+              if ((category === 'champion-skins' || category === 'items' || category === 'summoner-spells' || category === 'runes') && t.tagName === 'IMG' && !wasDragging) {
                 const src = (t as HTMLImageElement).src;
                 const meta = skinsMeta.find(m => m.url === src || (m.url && src.endsWith(m.url.split('/').pop() || '')));
                 if (meta) {
                   lastFocusRef.current = document.activeElement as HTMLElement;
+                  // Lock body scroll and remember current Y
+                  try {
+                    scrollYRef.current = window.scrollY || window.pageYOffset || 0;
+                    document.body.style.position = 'fixed';
+                    document.body.style.top = `-${scrollYRef.current}px`;
+                    document.body.style.left = '0';
+                    document.body.style.right = '0';
+                    document.body.style.width = '100%';
+                  } catch {}
                   setSelectedSkin(meta);
                 }
               }
@@ -267,7 +407,7 @@ export default function CreateTierListPage() {
             {loadingSkins && (
               <div className="text-sm text-gray-400">Chargement des skins...</div>
             )}
-            {!loadingSkins && championId && tiers.length > 0 && (
+            {!loadingSkins && tiers.length > 0 && (
               <TierListMaker
                 data={tiers}
                 onChange={setTiers}
@@ -275,47 +415,180 @@ export default function CreateTierListPage() {
               />
             )}
           </div>
-          {!championId && !loadingChampions && (
+          {category === 'champion-skins' && !championId && !loadingChampions && (
             <div className="text-sm text-gray-500">Sélectionne un champion pour charger les skins.</div>
           )}
         </div>
 
-        {selectedSkin && (
+  {(category === 'champion-skins' || category === 'items' || category === 'summoner-spells' || category === 'runes') && selectedSkin && (
           <div
             role="dialog"
             aria-modal="true"
-            aria-label={`Skin ${selectedSkin.name}`}
+            aria-label={`${category === 'items' ? 'Objet' : 'Skin'} ${selectedSkin.name}`}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
             <div
               className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-              onClick={() => { setSelectedSkin(null); lastFocusRef.current?.focus(); }}
+              onClick={() => {
+                // Close and restore scroll
+                try {
+                  const y = scrollYRef.current || 0;
+                  document.body.style.position = '';
+                  document.body.style.top = '';
+                  document.body.style.left = '';
+                  document.body.style.right = '';
+                  document.body.style.width = '';
+                  window.scrollTo(0, y);
+                } catch {}
+                setSelectedSkin(null);
+              }}
             />
-            <div className="relative bg-gray-850 border border-gray-700 rounded-lg shadow-2xl max-w-4xl w-full overflow-hidden animate-fade-in">
+            <div className="relative bg-gray-850 border border-gray-700 rounded-lg shadow-2xl max-w-6xl w-full overflow-hidden animate-fade-in">
               <button
-                onClick={() => { setSelectedSkin(null); lastFocusRef.current?.focus(); }}
+                onClick={() => {
+                  try {
+                    const y = scrollYRef.current || 0;
+                    document.body.style.position = '';
+                    document.body.style.top = '';
+                    document.body.style.left = '';
+                    document.body.style.right = '';
+                    document.body.style.width = '';
+                    window.scrollTo(0, y);
+                  } catch {}
+                  setSelectedSkin(null);
+                }}
                 className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                 aria-label="Fermer la modal"
                 autoFocus
               >×</button>
               <div className="flex flex-col md:flex-row">
-                <div className="flex-1 bg-black/40 flex items-center justify-center">
-                  <Image
-                    src={selectedSkin.splash || selectedSkin.url}
-                    alt={selectedSkin.name}
-                    width={1215}
-                    height={717}
-                    className="max-h-[70vh] w-auto h-auto object-contain"
-                    priority
-                    draggable={false}
-                  />
+                {/* Media area */}
+                <div className={`${category === 'champion-skins' ? 'md:flex-[1_1_60%]' : 'md:flex-1'} bg-black/40 relative min-h-[40vh] md:min-h-[60vh]`}>
+                  {category === 'champion-skins' ? (
+                    <>
+                      <Image
+                        src={selectedSkin.splash || selectedSkin.url}
+                        alt={selectedSkin.name}
+                        fill
+                        sizes="100vw"
+                        className="object-contain md:object-cover w-full h-full"
+                        quality={100}
+                        priority
+                        draggable={false}
+                      />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-gray-900/60 via-transparent to-gray-900/20" />
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center p-6">
+                      <Image
+                        src={selectedSkin.url}
+                        alt={selectedSkin.name}
+                        width={160}
+                        height={160}
+                        className="w-40 h-40 object-contain"
+                        quality={100}
+                        priority
+                        draggable={false}
+                      />
+                    </div>
+                  )}
                 </div>
-                <div className="md:w-64 p-4 space-y-4 flex flex-col">
-                  <h2 className="text-xl font-semibold leading-tight">{selectedSkin.name}</h2>
-                  <p className="text-sm text-gray-400">Aperçu haute résolution du skin. (Cliquer dehors ou sur × pour fermer)</p>
+                {/* Info panel */}
+                <div className="md:w-[420px] p-5 space-y-4 flex flex-col">
+                  {category === 'champion-skins' ? (
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <h2 className="text-2xl font-semibold leading-tight break-words">
+                          <span className="text-gray-300">
+                            {champions.find(c => c.id === championId)?.name || ''}
+                          </span>
+                          <span className="text-gray-500"> — </span>
+                          <span className="text-white">{selectedSkin.name}</span>
+                        </h2>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] px-2 py-1 rounded bg-white/5 border border-white/10 text-gray-300">
+                          Résolution: 1215×717
+                        </span>
+                        <a
+                          href={selectedSkin.splash || selectedSkin.url}
+                          target="_blank" rel="noreferrer"
+                          className="text-[11px] px-2 py-1 rounded bg-blue-600/80 hover:bg-blue-500 text-white"
+                        >Ouvrir l&apos;image</a>
+                        <a
+                          href={selectedSkin.splash || selectedSkin.url}
+                          download
+                          className="text-[11px] px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-gray-200"
+                        >Télécharger</a>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {(() => {
+                    const meta = selectedSkin.meta;
+                    const showInfo = (category === 'items' || category === 'summoner-spells' || category === 'runes') && !!meta;
+                    if (!showInfo) return null;
+                    return (
+                      <div className="text-sm space-y-2">
+                        {category === 'items' && meta?.plaintext && (
+                          <p className="text-gray-300">{meta.plaintext}</p>
+                        )}
+                        {category === 'items' && meta?.gold && (
+                          <div className="flex gap-3 text-gray-200 flex-wrap">
+                            <span className="px-2 py-1 rounded bg-white/10">Coût: {meta.gold.total}</span>
+                            <span className="px-2 py-1 rounded bg-white/10">Base: {meta.gold.base}</span>
+                            <span className="px-2 py-1 rounded bg-white/10">Revente: {meta.gold.sell}</span>
+                          </div>
+                        )}
+                        {category === 'items' && (meta?.stats && Object.keys(meta.stats).length > 0) ? (
+                          <div>
+                            <div className="text-xs uppercase tracking-wide text-gray-400 mb-1">Stats</div>
+                            <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-gray-200">
+                              {Object.entries(meta!.stats!).map(([k, v]) => (
+                                <li key={k} className="text-xs">{k}: <span className="text-gray-100 font-medium">{String(v)}</span></li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (category === 'items' && meta?.statsList && meta.statsList.length > 0) ? (
+                          <div>
+                            <div className="text-xs uppercase tracking-wide text-gray-400 mb-1">Stats</div>
+                            <ul className="list-disc pl-5 space-y-1 text-gray-200">
+                              {meta.statsList.map((line: string, idx: number) => (
+                                <li key={idx} className="text-xs">{line}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
+                        {category === 'items' && meta?.tags && meta.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {meta.tags.map((t: string) => (
+                              <span key={t} className="text-[10px] uppercase tracking-wide px-2 py-1 rounded bg-white/5 border border-white/10 text-gray-300">{t}</span>
+                            ))}
+                          </div>
+                        )}
+                        {meta?.description && (
+                          <div className="prose prose-invert max-w-none text-sm" dangerouslySetInnerHTML={{ __html: meta.description }} />
+                        )}
+                        {category === 'runes' && meta?.longDesc && (
+                          <div className="prose prose-invert max-w-none text-sm" dangerouslySetInnerHTML={{ __html: meta.longDesc }} />
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="mt-auto flex gap-2">
                     <button
-                      onClick={() => { setSelectedSkin(null); lastFocusRef.current?.focus(); }}
+                      onClick={() => {
+                        try {
+                          const y = scrollYRef.current || 0;
+                          document.body.style.position = '';
+                          document.body.style.top = '';
+                          document.body.style.left = '';
+                          document.body.style.right = '';
+                          document.body.style.width = '';
+                          window.scrollTo(0, y);
+                        } catch {}
+                        setSelectedSkin(null);
+                      }}
                       className="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-sm font-medium"
                     >Fermer</button>
                   </div>

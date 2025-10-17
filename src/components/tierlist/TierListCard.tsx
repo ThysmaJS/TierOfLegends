@@ -14,7 +14,7 @@ interface TierListCardProps {
   gradientFrom: string;
   gradientTo: string;
   previewText: string;
-  championId: string;
+  championId?: string;
   href?: string;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -42,6 +42,7 @@ export default function TierListCard({
     let cancelled = false;
     async function pickRandom() {
       try {
+        if (!championId) { setImg(null); return; }
         const res = await fetch(`/api/champions/${championId}`);
         if (!res.ok) return;
         const j = await res.json();

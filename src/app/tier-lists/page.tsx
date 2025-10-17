@@ -10,13 +10,14 @@ async function getTierLists() {
   return docs.map(d => ({
     id: d._id.toString(),
     title: d.title,
+    category: d.category ?? 'champion-skins',
     championId: d.championId,
-    description: `${d.tiers[0]?.items.length ?? 0} items classés`,
+    description: `${d.tiers[0]?.items.length ?? 0} items classés · ${d.category ?? 'champion-skins'}`,
     views: d.views ?? 0,
     likes: d.likes ?? 0,
     gradientFrom: 'from-blue-600',
     gradientTo: 'to-purple-500',
-    previewText: (d.championId || 'TL').slice(0,4).toUpperCase(),
+    previewText: (d.championId || d.category || 'TL').slice(0,4).toUpperCase(),
     updatedAt: d.updatedAt.toISOString(),
   }));
 }

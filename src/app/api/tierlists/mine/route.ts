@@ -14,6 +14,8 @@ export async function GET() {
     const data = docs.map(d => ({
       id: d._id.toString(),
       title: d.title,
+      category: d.category ?? 'champion',
+      categoryMeta: d.categoryMeta,
       championId: d.championId,
       tiers: d.tiers,
       likes: d.likes ?? 0,
