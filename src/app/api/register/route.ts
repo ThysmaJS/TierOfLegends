@@ -88,9 +88,9 @@ export async function POST(req: Request) {
     if (emailDoc || usernameDoc) {
       const detail = process.env.NODE_ENV !== 'production' ? { emailDocId: emailDoc?._id, usernameDocId: usernameDoc?._id } : undefined;
       if (emailDoc) {
-        return NextResponse.json({ error: 'Email déjà enregistré', ...(detail ? { detail } : {}) }, { status: 409 });
+        return NextResponse.json({ error: { fieldErrors: { email: ['Email déjà enregistré'] }, formErrors: [] }, ...(detail ? { detail } : {}) }, { status: 409 });
       }
-      return NextResponse.json({ error: 'Pseudo déjà pris', ...(detail ? { detail } : {}) }, { status: 409 });
+      return NextResponse.json({ error: { fieldErrors: { username: ['Pseudo déjà pris'] }, formErrors: [] }, ...(detail ? { detail } : {}) }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -114,11 +114,13 @@ export async function POST(req: Request) {
         else if ('username' in keyPattern) msg = 'Pseudo déjà pris';
       }
       const detail = process.env.NODE_ENV !== 'production' ? { keyPattern: dup.keyPattern, keyValue: dup.keyValue } : undefined;
-      return NextResponse.json({ error: msg, ...(detail ? { detail } : {}) }, { status: 409 });
+      const fieldKey = msg.includes('Email') ? 'email' : (msg.includes('Pseudo') ? 'username' : '');
+      const payload = fieldKey ? { fieldErrors: { [fieldKey]: [msg] }, formErrors: [] } : { fieldErrors: {}, formErrors: [msg] };
+      return NextResponse.json({ error: payload, ...(detail ? { detail } : {}) }, { status: 409 });
     }
     const message = e instanceof Error ? e.message : 'Failed to register';
     console.error('Register error', e);
-    const payload: { error: string; detail?: string } = { error: 'Failed to register' };
+    const payload: { error: { fieldErrors: Record<string, string[]>; formErrors: string[] }; detail?: string } = { error: { fieldErrors: {}, formErrors: ['Failed to register'] } };
     if (process.env.NODE_ENV !== 'production') payload.detail = message;
     return NextResponse.json(payload, { status: 500 });
   }

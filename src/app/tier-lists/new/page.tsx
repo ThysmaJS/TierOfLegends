@@ -41,6 +41,11 @@ export default function CreateTierListPage() {
   const [loadingChampions, setLoadingChampions] = React.useState(true);
   const [loadingSkins, setLoadingSkins] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  // Form errors handling
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
+  const [formErrors, setFormErrors] = React.useState<string[]>([]);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
   const [championQuery, setChampionQuery] = React.useState('');
   const [openChampions, setOpenChampions] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement | null>(null);
@@ -208,12 +213,25 @@ export default function CreateTierListPage() {
 
   async function handleSave() {
     try {
-      if (!title.trim() || tiers.length === 0) {
-        alert('Renseigne le titre et prépare tes tiers.');
+      // reset errors
+      setSubmitError(null);
+      setFieldErrors({});
+      setFormErrors([]);
+      setSubmitting(true);
+      // a few quick client checks for better UX
+      if (!title.trim()) {
+        setFieldErrors(prev => ({ ...prev, title: ['Le titre est requis'] }));
+        setSubmitting(false);
+        return;
+      }
+      if (tiers.length === 0) {
+        setFormErrors(['Prépare au moins un tier.']);
+        setSubmitting(false);
         return;
       }
       if (category === 'champion-skins' && !championId) {
-        alert('Choisis un champion pour cette catégorie.');
+        setFieldErrors(prev => ({ ...prev, championId: ['Choisis un champion pour cette catégorie'] }));
+        setSubmitting(false);
         return;
       }
       const res = await fetch('/api/tierlists', {
@@ -226,15 +244,28 @@ export default function CreateTierListPage() {
         return;
       }
       if (!res.ok) {
-        const errJson = await res.json().catch(() => ({} as { error?: unknown }));
-        throw new Error(errJson.error ? JSON.stringify(errJson.error) : 'Erreur lors de la sauvegarde');
+        type ZodFlatten = { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
+        const errJson = await res.json().catch(() => ({} as { error?: ZodFlatten }));
+        // Try to map Zod flatten error shape
+        const z = errJson?.error;
+        if (z && (z.fieldErrors || z.formErrors)) {
+          setFieldErrors(z.fieldErrors ?? {});
+          setFormErrors(Array.isArray(z.formErrors) ? z.formErrors : []);
+          setSubmitting(false);
+          return;
+        }
+        setSubmitError('Erreur lors de la sauvegarde');
+        setSubmitting(false);
+        return;
       }
       await res.json();
       // Redirige vers le profil après succès
       router.push('/profil');
     } catch (e) {
       console.error(e);
-      alert(e instanceof Error ? e.message : 'Erreur inconnue');
+      setSubmitError(e instanceof Error ? e.message : 'Erreur inconnue');
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -245,6 +276,14 @@ export default function CreateTierListPage() {
           <div className="space-y-2">
             <h1 className="text-3xl font-bold">Créer une Tier List</h1>
             <p className="text-gray-300 text-sm">Choisis une catégorie, prépare tes tiers, puis sauvegarde.</p>
+            {(submitError || formErrors.length > 0) && (
+              <div className="rounded-md border border-red-500/40 bg-red-500/10 text-red-300 text-sm p-3">
+                {submitError && <div className="mb-1">{submitError}</div>}
+                {formErrors.map((m, i) => (
+                  <div key={i}>{m}</div>
+                ))}
+              </div>
+            )}
             <div className="flex flex-wrap gap-4 items-end">
               <div>
                 <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Catégorie</label>
@@ -262,10 +301,14 @@ export default function CreateTierListPage() {
                 <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Titre</label>
                 <input
                   value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  className="bg-gray-900 text-gray-100 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                  onChange={e => { setTitle(e.target.value); if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: [] })); }}
+                  aria-invalid={fieldErrors.title && fieldErrors.title.length > 0}
+                  className={`bg-gray-900 text-gray-100 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 ${fieldErrors.title?.length ? 'border-red-500/60' : 'border-white/20'}`}
                   placeholder="Titre de la tier list"
                 />
+                {fieldErrors.title?.length ? (
+                  <p className="mt-1 text-xs text-red-400">{fieldErrors.title[0]}</p>
+                ) : null}
               </div>
               {category === 'champion-skins' && (
               <div className="w-60">
@@ -281,8 +324,9 @@ export default function CreateTierListPage() {
                       onChange={e => setChampionQuery(e.target.value)}
                       onFocus={() => setOpenChampions(true)}
                       aria-haspopup="listbox"
+                      aria-invalid={fieldErrors.championId && fieldErrors.championId.length > 0}
                       placeholder="Rechercher..."
-                      className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-8 placeholder:text-gray-400"
+                      className={`w-full bg-white/10 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-8 placeholder:text-gray-400 ${fieldErrors.championId?.length ? 'border-red-500/60' : 'border-white/20'}`}
                     />
                     {championQuery && (
                       <button
@@ -292,6 +336,9 @@ export default function CreateTierListPage() {
                         aria-label="Effacer la recherche"
                       >×</button>
                     )}
+                    {fieldErrors.championId?.length ? (
+                      <p className="mt-1 text-xs text-red-400">{fieldErrors.championId[0]}</p>
+                    ) : null}
                     {openChampions && (
                       <ul
                         role="listbox"
@@ -354,9 +401,9 @@ export default function CreateTierListPage() {
               
             </div>
           </div>
-          <div className="flex gap-3">
-            <button onClick={handleReset} className="px-4 py-2 rounded bg-white/10 hover:bg-white/20 text-sm font-medium">Réinitialiser</button>
-            <button onClick={handleSave} className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-sm font-medium">Sauvegarder</button>
+          <div className="flex gap-3" aria-busy={submitting || undefined}>
+            <button onClick={handleReset} disabled={submitting} className="px-4 py-2 rounded bg-white/10 hover:bg-white/20 disabled:opacity-50 text-sm font-medium">Réinitialiser</button>
+            <button onClick={handleSave} disabled={submitting} className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-sm font-medium">{submitting ? 'Sauvegarde…' : 'Sauvegarder'}</button>
             <Link href="/tier-lists" className="px-4 py-2 rounded bg-white/10 hover:bg-white/20 text-sm font-medium">Retour</Link>
           </div>
         </header>

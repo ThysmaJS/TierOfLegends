@@ -21,6 +21,7 @@ function LoginContent() {
   const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
 
   const [callbackUrl, setCallbackUrl] = React.useState<string>('/');
 
@@ -38,10 +39,11 @@ function LoginContent() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!email || !password) {
-      setError('Email et mot de passe requis');
-      return;
-    }
+    setFieldErrors({});
+    const missing: Record<string, string[]> = {};
+    if (!email) missing.email = ['Email requis'];
+    if (!password) missing.password = ['Mot de passe requis'];
+    if (Object.keys(missing).length) { setFieldErrors(missing); return; }
     setLoading(true);
     try {
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -71,7 +73,7 @@ function LoginContent() {
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-6 shadow">
           <form onSubmit={onSubmit} className="space-y-4">
             {error && (
-              <div className="text-sm text-red-400">{error}</div>
+              <div className="rounded-md border border-red-500/40 bg-red-500/10 text-red-300 text-sm p-3">{error}</div>
             )}
             <div>
               <label htmlFor="email" className="block text-sm text-gray-300 mb-1">Email</label>
@@ -79,11 +81,13 @@ function LoginContent() {
                 id="email"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-gray-400"
+                onChange={e => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors(prev=>({ ...prev, email: [] })); }}
+                aria-invalid={fieldErrors.email && fieldErrors.email.length>0}
+                className={`w-full bg-white/10 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-gray-400 ${fieldErrors.email?.length ? 'border-red-500/60' : 'border-white/20'}`}
                 placeholder="toi@exemple.com"
                 autoComplete="email"
               />
+              {fieldErrors.email?.length ? (<p className="mt-1 text-xs text-red-400">{fieldErrors.email[0]}</p>) : null}
             </div>
             <div>
               <label htmlFor="password" className="block text-sm text-gray-300 mb-1">Mot de passe</label>
@@ -91,11 +95,13 @@ function LoginContent() {
                 id="password"
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full bg-white/10 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-gray-400"
+                onChange={e => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors(prev=>({ ...prev, password: [] })); }}
+                aria-invalid={fieldErrors.password && fieldErrors.password.length>0}
+                className={`w-full bg-white/10 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-gray-400 ${fieldErrors.password?.length ? 'border-red-500/60' : 'border-white/20'}`}
                 placeholder="••••••••"
                 autoComplete="current-password"
               />
+              {fieldErrors.password?.length ? (<p className="mt-1 text-xs text-red-400">{fieldErrors.password[0]}</p>) : null}
             </div>
             <button
               type="submit"
