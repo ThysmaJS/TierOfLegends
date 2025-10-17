@@ -1,4 +1,4 @@
-import { getChampionDetails, getItemList, getSummonerSpells, getRunesKeystones } from '@/lib/riot';
+import { cachedChampionDetails, cachedItemList, cachedSummonerSpells, cachedRunesKeystones } from '@/lib/riot';
 import type { NextRequest } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -9,12 +9,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { searchParams } = new URL(request.url);
 
   try {
-    if (category === 'champion-skins') {
+  if (category === 'champion-skins') {
       const championId = searchParams.get('championId');
       if (!championId) {
         return Response.json({ error: 'championId requis' }, { status: 400 });
       }
-      const details = await getChampionDetails(championId);
+  const details = await cachedChampionDetails(championId, 'fr_FR');
       const items = details.skins.map(s => ({
         id: s.loading, // use unique image URL as item id (already in app)
         name: s.name,
@@ -24,14 +24,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     if (category === 'items') {
-      const items = await getItemList();
+      const items = await cachedItemList('fr_FR');
       const type = (searchParams.get('type') || '').toLowerCase(); // '', 'final', 'component', 'boots', 'consumable', 'trinket'
       const map = (searchParams.get('map') || '').toLowerCase(); // '', 'sr', 'aram'
 
-      const isFinal = (it: Awaited<ReturnType<typeof getItemList>>[number]) => !it.into || it.into.length === 0;
-      const isComponent = (it: Awaited<ReturnType<typeof getItemList>>[number]) => Array.isArray(it.into) && it.into.length > 0;
-      const hasTag = (it: Awaited<ReturnType<typeof getItemList>>[number], tag: string) => (it.tags || []).some(t => t.toLowerCase() === tag);
-      const mapOk = (it: Awaited<ReturnType<typeof getItemList>>[number]) => {
+      const isFinal = (it: Awaited<ReturnType<typeof cachedItemList>>[number]) => !it.into || it.into.length === 0;
+      const isComponent = (it: Awaited<ReturnType<typeof cachedItemList>>[number]) => Array.isArray(it.into) && it.into.length > 0;
+      const hasTag = (it: Awaited<ReturnType<typeof cachedItemList>>[number], tag: string) => (it.tags || []).some(t => t.toLowerCase() === tag);
+      const mapOk = (it: Awaited<ReturnType<typeof cachedItemList>>[number]) => {
         if (!map) return true;
         if (map === 'sr') return !!it.maps?.['11']; // Summoner's Rift
         if (map === 'aram') return !!it.maps?.['12']; // Howling Abyss
@@ -81,13 +81,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     if (category === 'summoner-spells') {
-      const spells = await getSummonerSpells();
+      const spells = await cachedSummonerSpells('fr_FR');
       const out = spells.map(s => ({ id: s.image, name: s.name, meta: { description: s.description, icon: s.image } }));
       return Response.json({ items: out });
     }
 
     if (category === 'runes') {
-      const runes = await getRunesKeystones();
+      const runes = await cachedRunesKeystones('fr_FR');
       const out = runes.map(r => ({ id: r.icon, name: r.name, meta: { key: r.key, icon: r.icon, shortDesc: r.shortDesc, longDesc: r.longDesc } }));
       return Response.json({ items: out });
     }
