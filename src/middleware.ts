@@ -1,3 +1,10 @@
-// Middleware is intentionally disabled for /tier-lists/new.
-// We rely on SSR guard for /profil and API route guards (401) for write actions.
-export { }
+import { NextResponse } from 'next/server';
+
+// No-op middleware to satisfy Next.js/Vercel. Does nothing and matches no routes.
+export default function middleware() {
+	return NextResponse.next();
+}
+
+export const config = {
+	matcher: [],
+};
