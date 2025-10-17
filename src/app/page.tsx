@@ -43,7 +43,7 @@ export default async function Home() {
                 Classe tes <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">skins, objets, sorts et runes</span> LoL
               </h1>
               <p className="text-lg lg:text-xl text-gray-300">
-                Crée des tier lists en français, sauvegarde-les, et explore celles de la communauté.
+                Crée des tier lists, sauvegarde-les, et explore celles de la communauté.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 justify-center">

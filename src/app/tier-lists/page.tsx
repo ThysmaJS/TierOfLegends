@@ -37,7 +37,7 @@ export default async function TierListPage() {
               Tier Lists <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Communauté</span>
             </h1>
             <p className="text-gray-300 max-w-2xl text-sm md:text-base">
-              Explore les classements créés par la communauté ou lance-toi et crée ta propre tier list de skins.
+              Explore les classements créés par la communauté ou lance-toi et crée ta propre tier list
             </p>
           </div>
           <div className="flex gap-3 items-center">
