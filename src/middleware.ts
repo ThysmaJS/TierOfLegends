@@ -8,7 +8,8 @@ export default async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     const originalPath = req.nextUrl.pathname + (req.nextUrl.search || '');
-    url.searchParams.set('next', originalPath);
+    // Use NextAuth-compatible param name so the login page and NextAuth can redirect correctly
+    url.searchParams.set('callbackUrl', originalPath);
     return NextResponse.redirect(url);
   }
   return NextResponse.next();

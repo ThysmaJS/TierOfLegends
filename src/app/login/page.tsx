@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { sanitizeCallbackUrl } from '@/lib/safeRedirect';
 
 export default function LoginPage() {
@@ -17,6 +17,7 @@ export default function LoginPage() {
 function LoginContent() {
   const sp = useSearchParams();
   const router = useRouter();
+  const { status } = useSession();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -24,9 +25,10 @@ function LoginContent() {
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
 
   const [callbackUrl, setCallbackUrl] = React.useState<string>('/');
+  const [cbReady, setCbReady] = React.useState(false);
 
   React.useEffect(() => {
-    const rawCb = sp.get('callbackUrl');
+    const rawCb = sp.get('callbackUrl') || sp.get('next');
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     try {
       const safePath = sanitizeCallbackUrl(rawCb, origin || '');
@@ -34,7 +36,15 @@ function LoginContent() {
     } catch {
       setCallbackUrl('/');
     }
+    setCbReady(true);
   }, [sp]);
+
+  // If already authenticated, don't stay on the login page; redirect to callbackUrl immediately
+  React.useEffect(() => {
+    if (status === 'authenticated' && cbReady) {
+      router.replace(callbackUrl || '/');
+    }
+  }, [status, callbackUrl, cbReady, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
