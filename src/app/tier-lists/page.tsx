@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { TierListCard } from '@/components/tierlist';
 import { auth } from '@/auth';
 import { getCollection } from '@/lib/mongodb';
 import type { TierListDoc } from '@/types/tierlist';
+import TierListFilters from '@/components/tierlist/TierListFilters';
+import ClientFilteredGrid from '@/app/tier-lists/pageClient';
 
 async function getTierLists() {
   const col = await getCollection<TierListDoc>('tierlists');
@@ -39,7 +40,8 @@ export default async function TierListPage() {
               Explore les classements créés par la communauté ou lance-toi et crée ta propre tier list de skins.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+              <TierListFilters />
             {isAuthed && (
               <Link href="/tier-lists/new" className="inline-flex items-center px-5 py-3 rounded-lg bg-blue-600 text-white text-sm font-medium shadow hover:bg-blue-700 transition-colors">
                 + Créer une Tier List
@@ -64,24 +66,7 @@ export default async function TierListPage() {
           </div>
         </div>
 
-        {/* Grid */}
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {tierLists.map(tl => (
-            <TierListCard
-              key={tl.id}
-              id={tl.id}
-              title={tl.title}
-              description={tl.description}
-              views={tl.views}
-              likes={tl.likes}
-              gradientFrom={tl.gradientFrom}
-              gradientTo={tl.gradientTo}
-              previewText={tl.previewText}
-              championId={tl.championId}
-              hideActions
-            />
-          ))}
-        </div>
+        <ClientFilteredGrid tierLists={tierLists} />
       </div>
     </div>
   );

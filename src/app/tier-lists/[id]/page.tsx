@@ -3,12 +3,13 @@ import type { TierListDoc } from '@/types/tierlist';
 import Link from 'next/link';
 import ClientTierListViewer from '@/app/tier-lists/[id]/viewer';
 
-interface Props { params: { id: string } }
+interface Props { params: Promise<{ id: string }> }
 
 export default async function TierListDetailPage({ params }: Props) {
   const col = await getCollection<TierListDoc>('tierlists');
   const { ObjectId } = await import('mongodb');
-  const doc = await col.findOne({ _id: new ObjectId(params.id) });
+  const { id } = await params;
+  const doc = await col.findOne({ _id: new ObjectId(id) });
   if (!doc) return (
     <div className="min-h-screen py-12">
       <div className="mx-auto max-w-screen-xl px-4">
