@@ -1,154 +1,146 @@
+import Link from 'next/link';
 import { Container } from '@/components/layout';
 import { Card } from '@/components/ui';
+import { getCollection } from '@/lib/mongodb';
+import type { TierListDoc } from '@/types/tierlist';
+import { TierListCard } from '@/components/tierlist';
 
-export default function Home() {
+export const revalidate = 600; // rafraîchit toutes les 10 min
+
+async function getHomeStats() {
+  const col = await getCollection<TierListDoc>('tierlists');
+  const docs = await col.find({}, { sort: { updatedAt: -1 }, limit: 6 }).toArray();
+  const count = await col.countDocuments();
+  const likes = docs.reduce((acc, t) => acc + (t.likes ?? 0), 0);
+  const views = docs.reduce((acc, t) => acc + (t.views ?? 0), 0);
+  const highlights = docs.map(d => ({
+    id: d._id.toString(),
+    title: d.title,
+    description: `${d.tiers[0]?.items.length ?? 0} items classés · ${d.category ?? 'champion-skins'}`,
+    views: d.views ?? 0,
+    likes: d.likes ?? 0,
+    gradientFrom: 'from-blue-600',
+    gradientTo: 'to-purple-500',
+    previewText: (d.championId || d.category || 'TL').slice(0,4).toUpperCase(),
+    championId: d.championId,
+  }));
+  return { count, likes, views, highlights };
+}
+
+export default async function Home() {
+  const { count, likes, views, highlights } = await getHomeStats();
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative py-20 lg:py-32">
+      {/* Hero */}
+      <section className="relative py-16 lg:py-28">
         <Container>
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Logo et titre principal */}
-            <div className="mb-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <span className="text-white font-bold text-3xl">TL</span>
+          <div className="max-w-5xl mx-auto text-center">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+                <span className="text-white font-bold text-2xl">TL</span>
               </div>
-              <h1 className="text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
-                Tier of <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Legends</span>
+              <h1 className="text-4xl lg:text-5xl font-bold text-white mb-3 leading-tight">
+                Classe tes <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">skins, objets, sorts et runes</span> LoL
               </h1>
-              <p className="text-xl lg:text-2xl text-gray-300 mb-8">
-                La plateforme ultime pour classer vos skins League of Legends favoris
+              <p className="text-lg lg:text-xl text-gray-300">
+                Crée des tier lists en français, sauvegarde-les, et explore celles de la communauté.
               </p>
             </div>
-
-            {/* Stats rapides */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              <Card className="text-center border border-white/10 bg-white/5 backdrop-blur-sm">
-                <div className="text-3xl font-bold text-blue-400 mb-2">150+</div>
-                <div className="text-gray-300">Champions disponibles</div>
-              </Card>
-              <Card className="text-center border border-white/10 bg-white/5 backdrop-blur-sm">
-                <div className="text-3xl font-bold text-purple-400 mb-2">1000+</div>
-                <div className="text-gray-300">Skins à classer</div>
-              </Card>
-              <Card className="text-center border border-white/10 bg-white/5 backdrop-blur-sm">
-                <div className="text-3xl font-bold text-green-400 mb-2">∞</div>
-                <div className="text-gray-300">Possibilités de classement</div>
-              </Card>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <Link href="/tier-lists" className="inline-flex items-center px-5 py-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 text-white text-sm font-medium">
+                Explorer les Tier Lists
+              </Link>
+              <Link href="/tier-lists/new" className="inline-flex items-center px-5 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium">
+                + Créer une Tier List
+              </Link>
             </div>
           </div>
         </Container>
       </section>
 
-      {/* Section Concept */}
-      <section className="py-16 lg:py-24 bg-white/5 backdrop-blur-sm border-t border-b border-white/10">
+      {/* Stats */}
+      <section className="pb-6">
         <Container>
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-              Comment ça fonctionne ?
-            </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Créez vos tier lists personnalisées en quelques clics et partagez vos opinions avec la communauté
-            </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <Card className="text-center border border-white/10 bg-white/5 backdrop-blur-sm">
+              <div className="text-2xl font-bold text-blue-400 mb-1">{count}</div>
+              <div className="text-gray-300 text-sm">Tier Lists publiées</div>
+            </Card>
+            <Card className="text-center border border-white/10 bg-white/5 backdrop-blur-sm">
+              <div className="text-2xl font-bold text-purple-400 mb-1">{likes}</div>
+              <div className="text-gray-300 text-sm">Likes cumulés</div>
+            </Card>
+            <Card className="text-center border border-white/10 bg-white/5 backdrop-blur-sm">
+              <div className="text-2xl font-bold text-green-400 mb-1">{views}</div>
+              <div className="text-gray-300 text-sm">Vues cumulées</div>
+            </Card>
           </div>
+        </Container>
+      </section>
 
+      {/* Catégories */}
+      <section className="py-12 bg-white/5 backdrop-blur-sm border-t border-b border-white/10">
+        <Container>
+          <div className="text-center mb-8">
+            <h2 className="text-2xl lg:text-3xl font-bold text-white">Catégories disponibles</h2>
+            <p className="text-gray-300 text-sm mt-2">Données officielles Riot (Data Dragon), localisées en français.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { key: 'champion-skins', title: 'Skins de champions', desc: 'Toutes les variantes visuelles par champion.' },
+              { key: 'items', title: 'Objets', desc: 'Objets finaux, composants, bottes, consommables.' },
+              { key: 'summoner-spells', title: 'Sorts d\u0027invocateur', desc: 'Flash, Téléportation, Fatigue, etc.' },
+              { key: 'runes', title: 'Runes (Keystones)', desc: 'Précision, Domination, Sorcellerie, etc.' },
+            ].map((c) => (
+              <Card key={c.key} className="p-5 border border-white/10 bg-white/5">
+                <h3 className="text-white font-semibold mb-1">{c.title}</h3>
+                <p className="text-gray-300 text-sm mb-4">{c.desc}</p>
+                <Link href="/tier-lists/new" className="inline-flex items-center px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm">Créer</Link>
+              </Card>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* Dernières Tier Lists */}
+      <section className="py-12">
+        <Container>
+          <div className="flex items-end justify-between mb-6">
+            <h2 className="text-2xl lg:text-3xl font-bold text-white">Dernières tier lists</h2>
+            <Link href="/tier-lists" className="text-sm text-blue-400 hover:text-blue-300">Tout voir</Link>
+          </div>
+          {highlights.length === 0 ? (
+            <p className="text-gray-400 text-sm">Aucune tier list publiée pour le moment.</p>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {highlights.map(h => (
+                <TierListCard key={h.id} hideActions {...h} />
+              ))}
+            </div>
+          )}
+        </Container>
+      </section>
+
+      {/* Comment ça marche */}
+      <section className="py-12 bg-white/5 backdrop-blur-sm border-t border-white/10">
+        <Container>
+          <div className="text-center mb-10">
+            <h2 className="text-2xl lg:text-3xl font-bold text-white">Comment ça marche ?</h2>
+            <p className="text-gray-300 text-sm mt-2">Glisse-dépose, sauvegarde instantanée, et partage avec la communauté.</p>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="text-center p-8 hover:shadow-lg transition-shadow bg-white/5 border border-white/10">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl">🎯</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Choisissez vos champions</h3>
-              <p className="text-gray-300">
-                Sélectionnez les champions dont vous voulez classer les skins parmi plus de 150 champions disponibles.
-              </p>
+            <Card className="text-center p-6 bg-white/5 border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-2">1. Choisis la catégorie</h3>
+              <p className="text-gray-300 text-sm">Skins de champion, objets, sorts d\u0027invocateur, ou runes (FR).</p>
             </Card>
-
-            <Card className="text-center p-8 hover:shadow-lg transition-shadow bg-white/5 border border-white/10">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl">📊</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Classez par tiers</h3>
-              <p className="text-gray-300">
-                Organisez les skins dans différents tiers (S, A, B, C, D) selon vos préférences et votre style de jeu.
-              </p>
+            <Card className="text-center p-6 bg-white/5 border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-2">2. Classe par tiers</h3>
+              <p className="text-gray-300 text-sm">Tiers S à E, visuels HQ (splash/loading) et informations détaillées.</p>
             </Card>
-
-            <Card className="text-center p-8 hover:shadow-lg transition-shadow bg-white/5 border border-white/10">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl">🌟</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Partagez vos créations</h3>
-              <p className="text-gray-300">
-                Exportez vos tier lists et partagez-les avec vos amis ou sur les réseaux sociaux pour débattre !
-              </p>
+            <Card className="text-center p-6 bg-white/5 border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-2">3. Sauvegarde & partage</h3>
+              <p className="text-gray-300 text-sm">Connexion sécurisée, profil perso, et découverte des listes publiées.</p>
             </Card>
-          </div>
-        </Container>
-      </section>
-
-      {/* Section Fonctionnalités */}
-      <section className="py-16 lg:py-24 bg-white/5 backdrop-blur-sm border-b border-white/10">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
-                Fonctionnalités avancées
-              </h2>
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-2">Interface intuitive</h3>
-                    <p className="text-gray-300">Drag & drop simple pour organiser vos skins facilement</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-2">Sauvegarde automatique</h3>
-                    <p className="text-gray-300">Vos créations sont automatiquement sauvegardées</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-2">Export haute qualité</h3>
-                    <p className="text-gray-300">Exportez vos tier lists en haute résolution</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-2">Base de données complète</h3>
-                    <p className="text-gray-300">Tous les skins de League of Legends régulièrement mis à jour</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative">
-              <Card className="p-8 shadow-xl border border-white/10 bg-white/5 backdrop-blur-sm">
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold text-white mb-4">🚧 En développement</h3>
-                  <p className="text-gray-300 mb-6">
-                    Notre plateforme est actuellement en cours de développement. 
-                    Bientôt, vous pourrez créer et partager vos tier lists !
-                  </p>
-                  <div className="bg-blue-600/10 p-4 rounded-lg border border-blue-500/20">
-                    <p className="text-sm text-blue-300 font-medium">
-                      🎉 Lancement prévu bientôt
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            </div>
           </div>
         </Container>
       </section>
