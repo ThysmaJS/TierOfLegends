@@ -1,0 +1,14 @@
+{
+  "about": {
+    "title": "À propos",
+    "intro": "Tier of Legends est une application communautaire permettant de créer et de partager des tier lists autour de l'univers de League of Legends.",
+    "sourcesTitle": "Sources de données",
+    "sourcesText": "Les données proviennent de Riot Data Dragon. Les images et descriptions sont affichées en français lorsque disponibles.",
+    "featuresTitle": "Fonctionnalités",
+    "features": [
+      "Création de tier lists (skins, objets, sorts d'invocateur, runes)",
+      "Enregistrement et listing publics",
+      "Modales d'infos détaillées"
+    ]
+  }
+}

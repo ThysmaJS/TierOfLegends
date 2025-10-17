@@ -1,5 +1,6 @@
 // Utilities to interact with Riot Data Dragon (static LoL data)
 // Docs: https://developer.riotgames.com/docs/lol
+import { unstable_cache } from 'next/cache';
 
 export interface RiotChampionSummary {
   id: string; // e.g. Aatrox
@@ -195,4 +196,45 @@ export async function getRunesKeystones(locale: string = 'fr_FR'): Promise<RiotR
     }
   }
   return out;
+}
+
+// Cached wrappers (data cache) — keep public API simple while enabling tag-based revalidation.
+export async function cachedChampionList(locale: string = 'fr_FR') {
+  return unstable_cache(
+    () => getChampionList(locale),
+    ['ddragon:champions', locale],
+    { revalidate: 60 * 60, tags: ['ddragon:champions'] }
+  )();
+}
+
+export async function cachedChampionDetails(championId: string, locale: string = 'fr_FR') {
+  return unstable_cache(
+    () => getChampionDetails(championId, locale),
+    ['ddragon:champion', championId, locale],
+    { revalidate: 60 * 60, tags: ['ddragon:champion'] }
+  )();
+}
+
+export async function cachedItemList(locale: string = 'fr_FR') {
+  return unstable_cache(
+    () => getItemList(locale),
+    ['ddragon:items', locale],
+    { revalidate: 60 * 60, tags: ['ddragon:items'] }
+  )();
+}
+
+export async function cachedSummonerSpells(locale: string = 'fr_FR') {
+  return unstable_cache(
+    () => getSummonerSpells(locale),
+    ['ddragon:spells', locale],
+    { revalidate: 60 * 60, tags: ['ddragon:spells'] }
+  )();
+}
+
+export async function cachedRunesKeystones(locale: string = 'fr_FR') {
+  return unstable_cache(
+    () => getRunesKeystones(locale),
+    ['ddragon:runes', locale],
+    { revalidate: 60 * 60, tags: ['ddragon:runes'] }
+  )();
 }
