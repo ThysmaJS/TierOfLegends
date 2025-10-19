@@ -305,18 +305,6 @@ export default function CreateTierListPage() {
             )}
             <div className="flex flex-wrap gap-4 items-end">
               <div>
-                <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Catégorie</label>
-                <select
-                  value={category}
-                  onChange={e => setCategory(e.target.value as Category)}
-                  className="bg-gray-900 text-gray-100 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                >
-                  {CATEGORY_OPTIONS.map(o => (
-                    <option key={o.key} value={o.key}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
                 <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Titre</label>
                 <input
                   value={title}
@@ -328,6 +316,18 @@ export default function CreateTierListPage() {
                 {fieldErrors.title?.length ? (
                   <p className="mt-1 text-xs text-red-400">{fieldErrors.title[0]}</p>
                 ) : null}
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wide text-gray-400 mb-1">Catégorie</label>
+                <select
+                  value={category}
+                  onChange={e => setCategory(e.target.value as Category)}
+                  className="bg-gray-900 text-gray-100 border border-white/20 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                >
+                  {CATEGORY_OPTIONS.map(o => (
+                    <option key={o.key} value={o.key}>{o.label}</option>
+                  ))}
+                </select>
               </div>
               {category === 'champion-skins' && (
               <div className="w-60">
