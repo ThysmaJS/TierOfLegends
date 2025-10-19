@@ -11,7 +11,7 @@ import type { TierListPublic } from '@/types/tierlist';
 export default function ClientProfil() {
   const { data: session, update } = useSession();
   const [localPreview, setLocalPreview] = React.useState<string | null>(null);
-  const [mine, setMine] = React.useState<Array<{ id: string; title: string; updatedAt: string; championId?: string }>>([]);
+  const [mine, setMine] = React.useState<Array<{ id: string; title: string; updatedAt: string; championId?: string; coverImageUrl?: string }>>([]);
   const [loadingMine, setLoadingMine] = React.useState(false);
   const router = useRouter();
 
@@ -55,11 +55,12 @@ export default function ClientProfil() {
         if (!res.ok) return;
         const j: { tierlists?: TierListPublic[] } = await res.json();
         if (!cancelled) {
-          const mapped = (j.tierlists ?? []).map(t => ({
+          const mapped = (j.tierlists ?? []).map((t: TierListPublic) => ({
             id: t.id,
             title: t.title,
             updatedAt: t.updatedAt,
             championId: t.championId,
+            coverImageUrl: t.coverImageUrl,
           }));
           setMine(mapped);
         }
@@ -164,7 +165,8 @@ export default function ClientProfil() {
                     gradientFrom="from-blue-600"
                     gradientTo="to-purple-500"
                     previewText={(t.championId || 'TL').slice(0,4).toUpperCase()}
-                    championId={t.championId || 'Ahri'}
+                    championId={t.championId}
+                    imageUrl={t.coverImageUrl}
                     onEdit={() => router.push(`/tier-lists/${t.id}`)}
                     onDelete={async () => {
                       if (!confirm('Supprimer cette tier list ?')) return;

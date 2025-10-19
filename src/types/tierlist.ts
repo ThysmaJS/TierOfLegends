@@ -11,6 +11,8 @@ export interface TierListDoc {
   category?: TierCategory;
   categoryMeta?: Record<string, unknown>;
   championId?: string; // only for category 'champion-skins'
+  coverImageUrl?: string; // persisted cover image for card previews
+  coverMode?: 'manual' | 'random';
   tiers: TierRow[];
   likes: number;
   views: number;
@@ -23,6 +25,8 @@ export interface TierListCreateInput {
   category: TierCategory;
   championId?: string;
   categoryMeta?: Record<string, unknown>;
+  coverImageUrl?: string; // optional manual cover; if absent and coverMode=random, server may compute
+  coverMode?: 'manual' | 'random';
   tiers: TierRow[];
 }
 
@@ -32,6 +36,8 @@ export interface TierListPublic {
   category: TierCategory;
   categoryMeta?: Record<string, unknown>;
   championId?: string;
+  coverImageUrl?: string;
+  coverMode?: 'manual' | 'random';
   tiers: TierRow[];
   likes: number;
   views: number;

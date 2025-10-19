@@ -15,6 +15,7 @@ interface TierListCardProps {
   gradientTo: string;
   previewText: string;
   championId?: string;
+  imageUrl?: string;
   href?: string;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -31,17 +32,20 @@ export default function TierListCard({
   gradientTo,
   previewText,
   championId,
+  imageUrl,
   href,
   onEdit,
   onDelete,
   hideActions,
 }: TierListCardProps) {
-  const [img, setImg] = React.useState<string | null>(null);
-  const [aspect, setAspect] = React.useState<string>('16 / 9');
+  const [img, setImg] = React.useState<string | null>(imageUrl || null);
+  // Use a fixed aspect ratio for all cards so items/spells/runes don't look shorter than champion splashes
+  const aspect = '16 / 9';
   React.useEffect(() => {
     let cancelled = false;
     async function pickRandom() {
       try {
+        if (imageUrl) { setImg(imageUrl); return; }
         if (!championId) { setImg(null); return; }
         const res = await fetch(`/api/champions/${championId}`);
         if (!res.ok) return;
@@ -62,27 +66,34 @@ export default function TierListCard({
     }
     pickRandom();
     return () => { cancelled = true; };
-  }, [championId]);
+  }, [championId, imageUrl]);
 
   const viewHref = href || `/tier-lists/${id}`;
+  const isIconPng = !!img && img.toLowerCase().includes('.png');
 
   return (
     <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-lg overflow-hidden hover:shadow-md transition-shadow">
       <Link href={viewHref} className="block">
-        <div className={`relative bg-gradient-to-br ${gradientFrom} ${gradientTo}`} style={{ aspectRatio: aspect }}>
+        <div className={`relative ${img ? 'bg-black' : `bg-gradient-to-br ${gradientFrom} ${gradientTo}`}`} style={{ aspectRatio: aspect }}>
           {img ? (
-            <Image
-              src={img}
-              alt={title}
-              fill
-              className="object-contain"
-              onLoadingComplete={(el) => {
-                // Calcule le ratio réel de l'image pour que le conteneur s'adapte et évite tout recadrage
-                const w = el.naturalWidth || 1215;
-                const h = el.naturalHeight || 717;
-                setAspect(`${w} / ${h}`);
-              }}
-            />
+            <>
+              {/* Background fill to cover edges */}
+              <Image
+                src={img}
+                alt=""
+                aria-hidden
+                fill
+                className={`object-cover ${isIconPng ? 'blur-lg scale-110 opacity-70' : ''}`}
+                quality={100}
+                priority={false}
+              />
+              {/* Foreground visual */}
+              {isIconPng ? (
+                <div className="absolute inset-0 flex items-center justify-center p-6">
+                  <Image src={img} alt={title} width={320} height={320} className="w-4/5 h-4/5 object-contain" quality={100} />
+                </div>
+              ) : null}
+            </>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-white text-lg font-semibold">{previewText}</span>

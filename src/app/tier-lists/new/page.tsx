@@ -67,6 +67,11 @@ export default function CreateTierListPage() {
   const scrollYRef = React.useRef(0);
   const [itemType, setItemType] = React.useState<'final' | 'component' | 'boots' | 'consumable' | 'trinket' | ''>('');
   const [itemMap, setItemMap] = React.useState<'sr' | 'aram' | ''>('');
+  // Cover image controls
+  const [coverMode, setCoverMode] = React.useState<'manual' | 'random'>('random');
+  const [coverImageUrl, setCoverImageUrl] = React.useState<string>('');
+  const [uploadingCover, setUploadingCover] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   
 
   // Pointer tracking to éviter l'ouverture de la modal pendant un drag
@@ -234,10 +239,24 @@ export default function CreateTierListPage() {
         setSubmitting(false);
         return;
       }
+      const payload: {
+        title: string;
+        category: Category;
+        championId?: string;
+        tiers: Tier[];
+        coverImageUrl?: string;
+        coverMode?: 'manual' | 'random';
+      } = { title: title.trim(), category, championId: category === 'champion-skins' ? championId : undefined, tiers };
+      if (coverMode === 'manual' && coverImageUrl.trim()) {
+        payload.coverImageUrl = coverImageUrl.trim();
+        payload.coverMode = 'manual';
+      } else {
+        payload.coverMode = 'random';
+      }
       const res = await fetch('/api/tierlists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title.trim(), category, championId: category === 'champion-skins' ? championId : undefined, tiers }),
+        body: JSON.stringify(payload),
       });
       if (res.status === 401) {
         router.push('/login?callbackUrl=%2Ftier-lists%2Fnew');
@@ -408,6 +427,58 @@ export default function CreateTierListPage() {
           </div>
         </header>
         <div className="rounded-lg border border-white/10 bg-white/5 p-4 overflow-x-auto min-h-[200px]">
+          {/* Cover controls */}
+          <div className="mb-4 grid gap-3 md:grid-cols-3">
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-gray-300">Image de couverture</label>
+              <div className="flex items-center gap-4 text-sm">
+                <label className="inline-flex items-center gap-2">
+                  <input type="radio" name="cover" checked={coverMode==='random'} onChange={()=>setCoverMode('random')} />
+                  Aléatoire (déterministe)
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input type="radio" name="cover" checked={coverMode==='manual'} onChange={()=>setCoverMode('manual')} />
+                  Fichier (parcourir)
+                </label>
+              </div>
+            </div>
+            {coverMode==='manual' && (
+              <div className="md:col-span-2">
+                <div className="flex items-center gap-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      try {
+                        setUploadingCover(true);
+                        const fd = new FormData();
+                        fd.append('file', f);
+                        const r = await fetch('/api/tierlists/cover', { method: 'POST', body: fd });
+                        const j = await r.json();
+                        if (r.ok && j.url) {
+                          setCoverImageUrl(j.url as string);
+                        }
+                      } finally {
+                        setUploadingCover(false);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 border border-white/20 text-sm"
+                  >Parcourir…</button>
+                  {uploadingCover && <span className="text-xs text-gray-400">Upload…</span>}
+                  {coverImageUrl && <span className="text-xs text-green-400">Image sélectionnée</span>}
+                </div>
+              </div>
+            )}
+          </div>
           <div
             className="relative dnd-fix"
             // Tracking pour click vs drag (n'impacte pas la lib)

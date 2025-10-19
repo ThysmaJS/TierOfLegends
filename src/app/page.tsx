@@ -23,6 +23,8 @@ async function getHomeStats() {
     gradientTo: 'to-purple-500',
     previewText: (d.championId || d.category || 'TL').slice(0,4).toUpperCase(),
     championId: d.championId,
+    coverImageUrl: d.coverImageUrl,
+    coverMode: d.coverMode,
   }));
   return { count, likes, views, highlights };
 }
@@ -114,7 +116,7 @@ export default async function Home() {
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {highlights.map(h => (
-                <TierListCard key={h.id} hideActions {...h} />
+                <TierListCard key={h.id} hideActions {...h} imageUrl={h.coverImageUrl || undefined} />
               ))}
             </div>
           )}

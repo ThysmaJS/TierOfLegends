@@ -17,6 +17,8 @@ export async function GET() {
       category: d.category ?? 'champion',
       categoryMeta: d.categoryMeta,
       championId: d.championId,
+      coverImageUrl: d.coverImageUrl,
+      coverMode: d.coverMode,
       tiers: d.tiers,
       likes: d.likes ?? 0,
       views: d.views ?? 0,

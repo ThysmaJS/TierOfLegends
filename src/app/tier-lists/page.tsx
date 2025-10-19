@@ -13,6 +13,7 @@ async function getTierLists() {
     title: d.title,
     category: d.category ?? 'champion-skins',
     championId: d.championId,
+    coverImageUrl: d.coverImageUrl,
     description: `${d.tiers[0]?.items.length ?? 0} items classés · ${d.category ?? 'champion-skins'}`,
     views: d.views ?? 0,
     likes: d.likes ?? 0,

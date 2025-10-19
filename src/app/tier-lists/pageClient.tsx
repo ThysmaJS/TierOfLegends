@@ -13,6 +13,7 @@ type TL = {
   gradientTo: string;
   previewText: string;
   championId?: string;
+  coverImageUrl?: string;
 };
 
 export default function ClientFilteredGrid({ tierLists }: { tierLists: TL[] }) {
@@ -36,6 +37,7 @@ export default function ClientFilteredGrid({ tierLists }: { tierLists: TL[] }) {
           gradientTo={tl.gradientTo}
           previewText={tl.previewText}
           championId={tl.championId}
+          imageUrl={tl.coverImageUrl}
           hideActions
         />
       ))}
