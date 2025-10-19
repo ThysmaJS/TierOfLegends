@@ -9,10 +9,17 @@ export default async function middleware(req: NextRequest) {
   }
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   if (!token) {
+    // Special case: for tier list creation, redirect to login WITHOUT callbackUrl to avoid callback issues
+    if (req.nextUrl.pathname === '/tier-lists/new') {
+      const url = req.nextUrl.clone();
+      url.pathname = '/login';
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
+    // Default: keep callbackUrl so user returns to original page after login
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     const originalPath = req.nextUrl.pathname + (req.nextUrl.search || '');
-    // Use NextAuth-compatible param name so the login page and NextAuth can redirect correctly
     url.searchParams.set('callbackUrl', originalPath);
     return NextResponse.redirect(url);
   }
