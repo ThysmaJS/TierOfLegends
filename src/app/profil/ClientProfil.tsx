@@ -13,6 +13,8 @@ export default function ClientProfil() {
   const [localPreview, setLocalPreview] = React.useState<string | null>(null);
   const [mine, setMine] = React.useState<Array<{ id: string; title: string; updatedAt: string; championId?: string; coverImageUrl?: string }>>([]);
   const [loadingMine, setLoadingMine] = React.useState(false);
+  const [liked, setLiked] = React.useState<Array<{ id: string; title: string; updatedAt: string; championId?: string; coverImageUrl?: string; views: number; likes: number }>>([]);
+  const [loadingLiked, setLoadingLiked] = React.useState(false);
   const router = useRouter();
 
   const user = {
@@ -69,6 +71,29 @@ export default function ClientProfil() {
       }
     }
     loadMine();
+    async function loadLiked() {
+      try {
+        setLoadingLiked(true);
+        const res = await fetch('/api/tierlists/liked');
+        if (!res.ok) return;
+        const j: { tierlists?: TierListPublic[] } = await res.json();
+        if (!cancelled) {
+          const mapped = (j.tierlists ?? []).map((t: TierListPublic) => ({
+            id: t.id,
+            title: t.title,
+            updatedAt: t.updatedAt,
+            championId: t.championId,
+            coverImageUrl: t.coverImageUrl,
+            views: t.views,
+            likes: t.likes,
+          }));
+          setLiked(mapped);
+        }
+      } finally {
+        if (!cancelled) setLoadingLiked(false);
+      }
+    }
+    loadLiked();
     return () => { cancelled = true; };
   }, []);
 
@@ -184,9 +209,29 @@ export default function ClientProfil() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold text-white">Mes likes</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {loadingLiked ? (
+              <p className="text-sm text-gray-400">Chargement…</p>
+            ) : liked.length === 0 ? (
               <p className="text-sm text-gray-400">Tu n&apos;as pas encore liké de tier list.</p>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {liked.map(t => (
+                  <TierListCard
+                    key={t.id}
+                    id={t.id}
+                    title={t.title}
+                    description={`MAJ ${new Date(t.updatedAt).toLocaleDateString()}`}
+                    views={t.views}
+                    likes={t.likes}
+                    gradientFrom="from-blue-600"
+                    gradientTo="to-purple-500"
+                    previewText={(t.championId || 'TL').slice(0,4).toUpperCase()}
+                    championId={t.championId}
+                    imageUrl={t.coverImageUrl}
+                  />
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       </Container>

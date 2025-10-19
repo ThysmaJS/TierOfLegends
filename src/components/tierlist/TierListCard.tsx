@@ -41,6 +41,9 @@ export default function TierListCard({
   const [img, setImg] = React.useState<string | null>(imageUrl || null);
   // Use a fixed aspect ratio for all cards so items/spells/runes don't look shorter than champion splashes
   const aspect = '16 / 9';
+  const [likeCount, setLikeCount] = React.useState<number>(likes);
+  const [liking, setLiking] = React.useState(false);
+  const [liked, setLiked] = React.useState<boolean | null>(null);
   React.useEffect(() => {
     let cancelled = false;
     async function pickRandom() {
@@ -70,6 +73,38 @@ export default function TierListCard({
 
   const viewHref = href || `/tier-lists/${id}`;
   const isIconPng = !!img && img.toLowerCase().includes('.png');
+
+  async function toggleLike(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (liking) return;
+    setLiking(true);
+    try {
+      const method = liked ? 'DELETE' : 'POST';
+      // optimistic
+      setLiked((prev) => !prev);
+      setLikeCount((c) => c + (liked ? -1 : 1));
+      const res = await fetch(`/api/tierlists/${id}/like`, { method });
+      if (res.status === 401) {
+        // revert and redirect to login
+        setLiked((prev) => !prev);
+        setLikeCount((c) => c + (liked ? 1 : -1));
+        window.location.href = '/login?callbackUrl=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
+      if (!res.ok) {
+        // revert
+        setLiked((prev) => !prev);
+        setLikeCount((c) => c + (liked ? 1 : -1));
+        return;
+      }
+      const j = await res.json();
+      if (typeof j.likes === 'number') setLikeCount(j.likes);
+      setLiked(j.liked === true);
+    } finally {
+      setLiking(false);
+    }
+  }
 
   return (
     <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-lg overflow-hidden hover:shadow-md transition-shadow">
@@ -115,12 +150,18 @@ export default function TierListCard({
             </svg>
             {views} vues
           </span>
-          <span className="flex items-center">
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button
+            onClick={toggleLike}
+            disabled={liking}
+            className={`flex items-center px-2 py-1 rounded transition-colors ${liked ? 'text-pink-400 bg-pink-400/10 border border-pink-400/20' : 'hover:bg-white/10'}`}
+            aria-pressed={liked || false}
+            aria-label={liked ? 'Retirer le like' : 'Liker'}
+          >
+            <svg className={`w-4 h-4 mr-1 ${liked ? 'fill-current' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
-            {likes} likes
-          </span>
+            {likeCount}
+          </button>
         </div>
 
         {!hideActions && (
