@@ -69,18 +69,27 @@ export async function POST(req: NextRequest) {
     if (!coverImageUrl && coverMode === 'random') {
       try {
         const cat = parsed.data.category ?? 'champion-skins';
-        // Use a deterministic seed from title+category+championId to pick an item consistently
-        const seedSource = `${parsed.data.title}|${cat}|${parsed.data.championId ?? ''}`;
-        let seed = 0;
-        for (let i = 0; i < seedSource.length; i++) seed = (seed * 31 + seedSource.charCodeAt(i)) >>> 0;
-        function pick<T>(arr: T[]): T | undefined { return arr.length ? arr[seed % arr.length] : undefined; }
+        // Deterministic picks using a stable seed function
+        function mkSeed(source: string) {
+          let s = 0;
+          for (let i = 0; i < source.length; i++) s = (s * 31 + source.charCodeAt(i)) >>> 0;
+          return s >>> 0;
+        }
+        function makePicker(seed: number) {
+          return function pick<T>(arr: T[]): T | undefined { return arr.length ? arr[seed % arr.length] : undefined; };
+        }
         if (cat === 'champion-skins' && parsed.data.championId) {
+          // For champion skins, keep the same skin for a given champion across time (seed only by championId)
+          const pick = makePicker(mkSeed(parsed.data.championId));
           const cj = await cachedChampionDetails(parsed.data.championId, 'fr_FR');
           const skins: Array<{ loading: string; splash?: string }> = cj.skins || [];
           const pool: string[] = skins.filter((s: { loading: string; splash?: string }) => !!s.splash).map((s) => s.splash!)
           const altPool: string[] = skins.map((s: { loading: string; splash?: string }) => s.loading)
           coverImageUrl = pick(pool) || pick(altPool);
         } else if (cat === 'items' || cat === 'summoner-spells' || cat === 'runes') {
+          // For other categories, keep previous behavior: seed on title+category for per-list stability
+          const seed = mkSeed(`${parsed.data.title}|${cat}`);
+          const pick = makePicker(seed);
           // Use only the category visuals (icons) — never champion skins here
           const deck = (parsed.data.tiers || []).find(t => t.name === 'Deck');
           const fromDeck = deck && deck.items && deck.items.length ? pick(deck.items) : undefined;

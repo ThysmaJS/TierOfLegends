@@ -12,6 +12,7 @@ export default function Header() {
   const email = session?.user?.email || '';
   const image = (session?.user?.image as string) || '';
   const initials = (username || email || 'U').slice(0, 2).toUpperCase();
+  const isAdmin = (session?.user as unknown as { role?: 'USER' | 'ADMIN' })?.role === 'ADMIN';
 
   return (
     <header className="bg-gray-900 shadow-lg">
@@ -41,6 +42,13 @@ export default function Header() {
                   <li>
                     <Link className="text-gray-400 transition hover:text-white" href="/profil">
                       Profil
+                    </Link>
+                  </li>
+                )}
+                {isAuthed && isAdmin && (
+                  <li>
+                    <Link className="text-gray-400 transition hover:text-white" href="/admin">
+                      Admin
                     </Link>
                   </li>
                 )}
@@ -88,6 +96,9 @@ export default function Header() {
                 <Link href="/profil" className="flex items-center">
                   <Avatar initials={initials} imageUrl={image} size="sm" />
                 </Link>
+              )}
+              {isAuthed && isAdmin && (
+                <Link href="/admin" className="text-gray-400 transition hover:text-white">Admin</Link>
               )}
               <button
                 className="rounded-sm bg-gray-800 p-2 text-gray-400 transition hover:text-white"

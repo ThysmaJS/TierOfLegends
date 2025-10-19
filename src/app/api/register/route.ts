@@ -30,6 +30,7 @@ type UserDoc = {
   email: string;
   username?: string; // make optional to accommodate legacy docs
   passwordHash: string;
+  role?: 'USER' | 'ADMIN';
   createdAt: Date;
   updatedAt: Date;
 };
@@ -95,7 +96,7 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const now = new Date();
-    const doc: UserDoc = { email, username, passwordHash, createdAt: now, updatedAt: now };
+  const doc: UserDoc = { email, username, passwordHash, role: 'USER', createdAt: now, updatedAt: now };
     const result = await users.insertOne(doc);
 
     return NextResponse.json({ id: result.insertedId.toString(), email: doc.email, username: doc.username }, { status: 201 });

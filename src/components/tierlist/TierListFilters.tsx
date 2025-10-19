@@ -1,7 +1,7 @@
 "use client";
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '@/store/store';
-import { setQuery, setCategory, setSortBy, setSortDir, clearFilters } from '@/store/slices/filtersSlice';
+import { setQuery, setCategory, setSortBy, setSortDir, clearFilters, type FiltersState } from '@/store/slices/filtersSlice';
 
 export default function TierListFilters() {
   const dispatch = useDispatch<AppDispatch>();
@@ -25,7 +25,7 @@ export default function TierListFilters() {
           <label className="text-xs uppercase tracking-wide text-gray-400">Catégorie</label>
           <select
             value={category}
-            onChange={(e)=>dispatch(setCategory(e.target.value as any))}
+            onChange={(e)=>dispatch(setCategory(e.target.value as FiltersState['category']))}
             className="h-10 rounded-md bg-black/30 text-white px-3 outline-none ring-1 ring-white/15 focus:ring-blue-500/60"
           >
             <option className="bg-gray-900" value="">Toutes</option>
@@ -39,7 +39,7 @@ export default function TierListFilters() {
           <label className="text-xs uppercase tracking-wide text-gray-400">Trier par</label>
           <select
             value={sortBy}
-            onChange={(e)=>dispatch(setSortBy(e.target.value as any))}
+            onChange={(e)=>dispatch(setSortBy(e.target.value as FiltersState['sortBy']))}
             className="h-10 rounded-md bg-black/30 text-white px-3 outline-none ring-1 ring-white/15 focus:ring-blue-500/60"
           >
             <option className="bg-gray-900" value="createdAt">Date de création</option>
@@ -52,7 +52,7 @@ export default function TierListFilters() {
           <div className="flex gap-2">
             <select
               value={sortDir}
-              onChange={(e)=>dispatch(setSortDir(e.target.value as any))}
+              onChange={(e)=>dispatch(setSortDir(e.target.value as FiltersState['sortDir']))}
               className="h-10 flex-1 rounded-md bg-black/30 text-white px-3 outline-none ring-1 ring-white/15 focus:ring-blue-500/60"
             >
               <option className="bg-gray-900" value="desc">Décroissant</option>

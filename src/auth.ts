@@ -8,7 +8,7 @@ import type { ObjectId } from 'mongodb';
 
 const secret = process.env.NEXTAUTH_SECRET;
 
-type UserDb = { _id: ObjectId; email: string; passwordHash: string; username?: string; avatarUrl?: string; name?: string };
+type UserDb = { _id: ObjectId; email: string; passwordHash: string; username?: string; avatarUrl?: string; name?: string; role?: 'USER' | 'ADMIN' };
 
 export const authOptions: NextAuthOptions = {
   secret,
@@ -56,6 +56,7 @@ export const authOptions: NextAuthOptions = {
           session.user.email = dbUser.email;
           session.user.image = (dbUser.avatarUrl ?? session.user.image ?? null) as string | null;
           (session.user as unknown as { id?: string }).id = id;
+          (session.user as unknown as { role?: 'USER' | 'ADMIN' }).role = dbUser.role ?? 'USER';
         }
       }
       return session;

@@ -20,5 +20,5 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/tier-lists/new'],
+  matcher: ['/tier-lists/new', '/admin'],
 };
