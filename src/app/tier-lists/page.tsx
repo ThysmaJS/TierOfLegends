@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { auth } from '@/auth';
 import { getCollection } from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 import type { TierListDoc } from '@/types/tierlist';
 import TierListFilters from '@/components/tierlist/TierListFilters';
 import ClientFilteredGrid from '@/app/tier-lists/pageClient';
@@ -8,6 +9,22 @@ import ClientFilteredGrid from '@/app/tier-lists/pageClient';
 async function getTierLists() {
   const col = await getCollection<TierListDoc>('tierlists');
   const docs = await col.find({}, { sort: { updatedAt: -1 }, limit: 60 }).toArray();
+
+  // Determine likedByMe for current user
+  const session = await auth();
+  let likedSet = new Set<string>();
+  if (session?.user?.email) {
+    try {
+      const usersCol = await getCollection<{ _id: ObjectId; email: string }>('users');
+      const dbUser = await usersCol.findOne({ email: session.user.email.toLowerCase() });
+      if (dbUser) {
+        const likesCol = await getCollection<{ userId: ObjectId; tierListId: ObjectId }>('likes');
+        const likes = await likesCol.find({ userId: dbUser._id }).toArray();
+        likedSet = new Set(likes.map(l => l.tierListId.toString()));
+      }
+    } catch {}
+  }
+
   return docs.map(d => ({
     id: d._id.toString(),
     title: d.title,
@@ -22,6 +39,7 @@ async function getTierLists() {
     gradientTo: 'to-purple-500',
     previewText: (d.championId || d.category || 'TL').slice(0,4).toUpperCase(),
     updatedAt: d.updatedAt.toISOString(),
+    likedByMe: likedSet.has(d._id.toString()),
   }));
 }
 

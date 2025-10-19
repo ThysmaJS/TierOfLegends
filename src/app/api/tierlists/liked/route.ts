@@ -30,6 +30,7 @@ export async function GET() {
       likes: d.likes ?? 0,
       views: d.views ?? 0,
       updatedAt: d.updatedAt.toISOString(),
+      likedByMe: true,
     }));
     return Response.json({ tierlists: data });
   } catch {

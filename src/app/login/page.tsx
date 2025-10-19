@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import { sanitizeCallbackUrl } from '@/lib/safeRedirect';
+import { PasswordInput } from '@/components/ui';
 
 export default function LoginPage() {
   return (
@@ -101,15 +102,12 @@ function LoginContent() {
             </div>
             <div>
               <label htmlFor="password" className="block text-sm text-gray-300 mb-1">Mot de passe</label>
-              <input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={password}
                 onChange={e => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors(prev=>({ ...prev, password: [] })); }}
-                aria-invalid={fieldErrors.password && fieldErrors.password.length>0}
-                className={`w-full bg-white/10 border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 placeholder:text-gray-400 ${fieldErrors.password?.length ? 'border-red-500/60' : 'border-white/20'}`}
-                placeholder="••••••••"
                 autoComplete="current-password"
+                invalid={!!(fieldErrors.password && fieldErrors.password.length>0)}
               />
               {fieldErrors.password?.length ? (<p className="mt-1 text-xs text-red-400">{fieldErrors.password[0]}</p>) : null}
             </div>

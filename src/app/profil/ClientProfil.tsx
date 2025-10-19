@@ -15,6 +15,7 @@ export default function ClientProfil() {
   const [loadingMine, setLoadingMine] = React.useState(false);
   const [liked, setLiked] = React.useState<Array<{ id: string; title: string; updatedAt: string; championId?: string; coverImageUrl?: string; likes: number }>>([]);
   const [loadingLiked, setLoadingLiked] = React.useState(false);
+  // no local default liked state needed here
   const router = useRouter();
 
   const user = {
@@ -78,13 +79,14 @@ export default function ClientProfil() {
         if (!res.ok) return;
         const j: { tierlists?: TierListPublic[] } = await res.json();
         if (!cancelled) {
-          const mapped = (j.tierlists ?? []).map((t: TierListPublic) => ({
+          const mapped = (j.tierlists ?? []).map((t: TierListPublic & { likedByMe?: boolean }) => ({
             id: t.id,
             title: t.title,
             updatedAt: t.updatedAt,
             championId: t.championId,
             coverImageUrl: t.coverImageUrl,
             likes: t.likes,
+            likedByMe: t.likedByMe === true,
           }));
           setLiked(mapped);
         }
@@ -227,6 +229,7 @@ export default function ClientProfil() {
                     championId={t.championId}
                     imageUrl={t.coverImageUrl}
                     createdAt={t.updatedAt}
+                    defaultLiked={true}
                   />
                 ))}
               </div>

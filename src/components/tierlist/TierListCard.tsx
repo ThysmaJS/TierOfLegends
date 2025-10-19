@@ -20,6 +20,7 @@ interface TierListCardProps {
   onEdit?: () => void;
   onDelete?: () => void;
   hideActions?: boolean;
+  defaultLiked?: boolean;
 }
 
 export default function TierListCard({
@@ -37,13 +38,18 @@ export default function TierListCard({
   onDelete,
   hideActions,
   createdAt,
+  defaultLiked,
 }: TierListCardProps) {
   const [img, setImg] = React.useState<string | null>(imageUrl || null);
   // Use a fixed aspect ratio for all cards so items/spells/runes don't look shorter than champion splashes
   const aspect = '16 / 9';
   const [likeCount, setLikeCount] = React.useState<number>(likes);
   const [liking, setLiking] = React.useState(false);
-  const [liked, setLiked] = React.useState<boolean | null>(null);
+  const [liked, setLiked] = React.useState<boolean | null>(defaultLiked ?? null);
+  React.useEffect(() => {
+    // Update liked state if the card id changes or default changes
+    setLiked(defaultLiked ?? null);
+  }, [id, defaultLiked]);
   React.useEffect(() => {
     let cancelled = false;
     async function pickRandom() {

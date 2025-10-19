@@ -16,6 +16,7 @@ type TL = {
   coverImageUrl?: string;
   createdAt?: string;
   category?: 'champion-skins' | 'items' | 'summoner-spells' | 'runes';
+  likedByMe?: boolean;
 };
 
 export default function ClientFilteredGrid({ tierLists }: { tierLists: TL[] }) {
@@ -61,6 +62,7 @@ export default function ClientFilteredGrid({ tierLists }: { tierLists: TL[] }) {
           championId={tl.championId}
           imageUrl={tl.coverImageUrl}
           createdAt={tl.createdAt}
+          defaultLiked={tl.likedByMe}
           hideActions
         />
         ))}

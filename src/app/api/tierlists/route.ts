@@ -26,6 +26,20 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
+    // Determine which tier lists are liked by current user
+    const session = await auth();
+    let likedIds = new Set<string>();
+    if (session?.user?.email) {
+      try {
+        const colUsers = await getCollection<{ _id: import('mongodb').ObjectId; email: string }>('users');
+        const dbUser = await colUsers.findOne({ email: session.user.email.toLowerCase() });
+        if (dbUser) {
+          const likesCol = await getCollection<{ userId: import('mongodb').ObjectId; tierListId: import('mongodb').ObjectId }>('likes');
+          const userLikes = await likesCol.find({ userId: dbUser._id }).toArray();
+          likedIds = new Set(userLikes.map(l => l.tierListId.toString()));
+        }
+      } catch {}
+    }
     const col = await getCollection<TierListDoc>('tierlists');
     const docs = await col.find({}, { sort: { updatedAt: -1 }, limit: 60 }).toArray();
     const data = docs.map(d => ({
@@ -40,6 +54,7 @@ export async function GET() {
       likes: d.likes ?? 0,
       views: d.views ?? 0,
       updatedAt: d.updatedAt.toISOString(),
+      likedByMe: likedIds.has(d._id.toString()),
     }));
     return Response.json({ tierlists: data });
   } catch {
