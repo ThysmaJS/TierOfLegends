@@ -41,6 +41,16 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Ensure clickable controls show hand cursor */
+button,
+[type="button"],
+[type="submit"],
+[role="button"],
+.clickable,
+.btn {
+  cursor: pointer;
+}
+
 /* DnD hardening: on garde seulement la désélection de texte */
 .dnd-fix, .dnd-fix * {
   -webkit-user-select: none;

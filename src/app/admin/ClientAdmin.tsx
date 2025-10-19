@@ -2,7 +2,7 @@
 import React from 'react';
 
 type UserRow = { id: string; email: string; username?: string; role: 'USER' | 'ADMIN'; createdAt?: string };
-type TierListRow = { id: string; title: string; category?: string; userId: string; likes: number; createdAt?: string; coverImageUrl?: string };
+type TierListRow = { id: string; title: string; category?: string; userId: string; likes: number; createdAt?: string; coverImageUrl?: string; authorUsername?: string; authorEmail?: string };
 
 export default function ClientAdmin() {
   const [tab, setTab] = React.useState<'users' | 'tierlists'>('users');
@@ -148,7 +148,7 @@ export default function ClientAdmin() {
                   </td>
                   <td className="px-4 py-2 text-gray-100">{t.title}</td>
                   <td className="px-4 py-2 text-gray-300">{t.category ?? '-'}</td>
-                  <td className="px-4 py-2 text-gray-400">{t.userId}</td>
+                  <td className="px-4 py-2 text-gray-400">{t.authorUsername ?? (t.authorEmail ?? t.userId)}</td>
                   <td className="px-4 py-2 text-gray-300">{t.likes}</td>
                   <td className="px-4 py-2 text-gray-400">{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '-'}</td>
                   <td className="px-4 py-2 text-right">
