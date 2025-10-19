@@ -38,7 +38,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     const users = await getCollection('users');
     const res = await users.updateOne({ _id: userId }, { $set: { role } });
     return NextResponse.json({ updated: res.modifiedCount === 1, role });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update role' }, { status: 500 });
   }
 }

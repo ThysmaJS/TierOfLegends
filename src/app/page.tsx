@@ -12,7 +12,6 @@ async function getHomeStats() {
   const docs = await col.find({}, { sort: { updatedAt: -1 }, limit: 6 }).toArray();
   const count = await col.countDocuments();
   const likes = docs.reduce((acc, t) => acc + (t.likes ?? 0), 0);
-  const views = 0;
   const highlights = docs.map(d => ({
     id: d._id.toString(),
     title: d.title,
@@ -26,11 +25,11 @@ async function getHomeStats() {
     coverImageUrl: d.coverImageUrl,
     coverMode: d.coverMode,
   }));
-  return { count, likes, views, highlights };
+  return { count, likes, views: 0, highlights };
 }
 
 export default async function Home() {
-  const { count, likes, views, highlights } = await getHomeStats();
+  const { count, likes, highlights } = await getHomeStats();
   return (
     <div className="min-h-screen">
       {/* Hero */}

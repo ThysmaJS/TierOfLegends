@@ -13,7 +13,7 @@ export default function ClientProfil() {
   const [localPreview, setLocalPreview] = React.useState<string | null>(null);
   const [mine, setMine] = React.useState<Array<{ id: string; title: string; updatedAt: string; championId?: string; coverImageUrl?: string }>>([]);
   const [loadingMine, setLoadingMine] = React.useState(false);
-  const [liked, setLiked] = React.useState<Array<{ id: string; title: string; updatedAt: string; championId?: string; coverImageUrl?: string; views: number; likes: number }>>([]);
+  const [liked, setLiked] = React.useState<Array<{ id: string; title: string; updatedAt: string; championId?: string; coverImageUrl?: string; likes: number }>>([]);
   const [loadingLiked, setLoadingLiked] = React.useState(false);
   const router = useRouter();
 
@@ -84,7 +84,6 @@ export default function ClientProfil() {
             updatedAt: t.updatedAt,
             championId: t.championId,
             coverImageUrl: t.coverImageUrl,
-            views: t.views,
             likes: t.likes,
           }));
           setLiked(mapped);
@@ -185,7 +184,6 @@ export default function ClientProfil() {
                     id={t.id}
                     title={t.title}
                     description={`MAJ ${new Date(t.updatedAt).toLocaleDateString()}`}
-                    views={0}
                     likes={0}
                     gradientFrom="from-blue-600"
                     gradientTo="to-purple-500"
@@ -222,7 +220,6 @@ export default function ClientProfil() {
                     id={t.id}
                     title={t.title}
                     description={`MAJ ${new Date(t.updatedAt).toLocaleDateString()}`}
-                    views={0}
                     likes={t.likes}
                     gradientFrom="from-blue-600"
                     gradientTo="to-purple-500"

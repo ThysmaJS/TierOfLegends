@@ -10,6 +10,10 @@ export default function ClientAdmin() {
   const [tls, setTls] = React.useState<TierListRow[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [usersPage, setUsersPage] = React.useState(1);
+  const [tlsPage, setTlsPage] = React.useState(1);
+  const usersPageSize = 20;
+  const tlsPageSize = 20;
 
   async function load() {
     setLoading(true); setError(null);
@@ -32,6 +36,7 @@ export default function ClientAdmin() {
   }
 
   React.useEffect(() => { load(); }, []);
+  React.useEffect(() => { setUsersPage(1); setTlsPage(1); }, [tab]);
 
   async function deleteUser(id: string) {
     if (!confirm('Supprimer ce compte utilisateur ? Cela supprimera aussi ses tier lists et likes.')) return;
@@ -97,7 +102,7 @@ export default function ClientAdmin() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              {users.map(u => (
+              {users.slice((usersPage-1)*usersPageSize, (usersPage-1)*usersPageSize + usersPageSize).map(u => (
                 <tr key={u.id} className="hover:bg-gray-800/50">
                   <td className="px-4 py-2 text-gray-100">{u.email}</td>
                   <td className="px-4 py-2 text-gray-300">{u.username ?? '-'}</td>
@@ -119,6 +124,25 @@ export default function ClientAdmin() {
               ))}
             </tbody>
           </table>
+          {users.length > usersPageSize && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <button
+                className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm disabled:opacity-50"
+                onClick={() => setUsersPage(p => Math.max(1, p - 1))}
+                disabled={usersPage === 1}
+              >
+                Précédent
+              </button>
+              <span className="text-gray-300 text-sm">Page {usersPage} / {Math.max(1, Math.ceil(users.length / usersPageSize))}</span>
+              <button
+                className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm disabled:opacity-50"
+                onClick={() => setUsersPage(p => Math.min(Math.ceil(users.length / usersPageSize), p + 1))}
+                disabled={usersPage >= Math.ceil(users.length / usersPageSize)}
+              >
+                Suivant
+              </button>
+            </div>
+          )}
         </div>
       )}
       {tab === 'tierlists' && (
@@ -136,7 +160,7 @@ export default function ClientAdmin() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
-              {tls.map(t => (
+              {tls.slice((tlsPage-1)*tlsPageSize, (tlsPage-1)*tlsPageSize + tlsPageSize).map(t => (
                 <tr key={t.id} className="hover:bg-gray-800/50">
                   <td className="px-4 py-2">
                     {t.coverImageUrl ? (
@@ -158,6 +182,25 @@ export default function ClientAdmin() {
               ))}
             </tbody>
           </table>
+          {tls.length > tlsPageSize && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <button
+                className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm disabled:opacity-50"
+                onClick={() => setTlsPage(p => Math.max(1, p - 1))}
+                disabled={tlsPage === 1}
+              >
+                Précédent
+              </button>
+              <span className="text-gray-300 text-sm">Page {tlsPage} / {Math.max(1, Math.ceil(tls.length / tlsPageSize))}</span>
+              <button
+                className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm disabled:opacity-50"
+                onClick={() => setTlsPage(p => Math.min(Math.ceil(tls.length / tlsPageSize), p + 1))}
+                disabled={tlsPage >= Math.ceil(tls.length / tlsPageSize)}
+              >
+                Suivant
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
