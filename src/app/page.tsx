@@ -12,12 +12,12 @@ async function getHomeStats() {
   const docs = await col.find({}, { sort: { updatedAt: -1 }, limit: 6 }).toArray();
   const count = await col.countDocuments();
   const likes = docs.reduce((acc, t) => acc + (t.likes ?? 0), 0);
-  const views = docs.reduce((acc, t) => acc + (t.views ?? 0), 0);
+  const views = 0;
   const highlights = docs.map(d => ({
     id: d._id.toString(),
     title: d.title,
-    description: `${d.tiers[0]?.items.length ?? 0} items classés · ${d.category ?? 'champion-skins'}`,
-    views: d.views ?? 0,
+  description: `${d.category ?? 'champion-skins'}`,
+  views: 0,
     likes: d.likes ?? 0,
     gradientFrom: 'from-blue-600',
     gradientTo: 'to-purple-500',
@@ -63,7 +63,7 @@ export default async function Home() {
       {/* Stats */}
       <section className="pb-6">
         <Container>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-5xl mx-auto">
             <Card className="text-center border border-white/10 bg-white/5 backdrop-blur-sm">
               <div className="text-2xl font-bold text-blue-400 mb-1">{count}</div>
               <div className="text-gray-300 text-sm">Tier Lists publiées</div>
@@ -72,10 +72,7 @@ export default async function Home() {
               <div className="text-2xl font-bold text-purple-400 mb-1">{likes}</div>
               <div className="text-gray-300 text-sm">Likes cumulés</div>
             </Card>
-            <Card className="text-center border border-white/10 bg-white/5 backdrop-blur-sm">
-              <div className="text-2xl font-bold text-green-400 mb-1">{views}</div>
-              <div className="text-gray-300 text-sm">Vues cumulées</div>
-            </Card>
+            {/* Vues retirées */}
           </div>
         </Container>
       </section>

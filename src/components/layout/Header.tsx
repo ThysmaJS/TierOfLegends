@@ -74,7 +74,7 @@ export default function Header() {
 
                   <button
                     onClick={() => signOut({ callbackUrl: '/' })}
-                    className="rounded-md bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+                    className="rounded-md bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 transition-colors cursor-pointer"
                   >
                     Se déconnecter
                   </button>

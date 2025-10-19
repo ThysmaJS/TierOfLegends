@@ -16,6 +16,7 @@ interface TierListCardProps {
   previewText: string;
   championId?: string;
   imageUrl?: string;
+  createdAt?: string;
   href?: string;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -37,6 +38,7 @@ export default function TierListCard({
   onEdit,
   onDelete,
   hideActions,
+  createdAt,
 }: TierListCardProps) {
   const [img, setImg] = React.useState<string | null>(imageUrl || null);
   // Use a fixed aspect ratio for all cards so items/spells/runes don't look shorter than champion splashes
@@ -107,8 +109,8 @@ export default function TierListCard({
   }
 
   return (
-    <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-      <Link href={viewHref} className="block">
+  <div className="border border-white/10 bg-white/5 backdrop-blur-sm rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+  <Link href={viewHref} className="block cursor-pointer" aria-label={`Ouvrir ${title}`}>
         <div className={`relative ${img ? 'bg-black' : `bg-gradient-to-br ${gradientFrom} ${gradientTo}`}`} style={{ aspectRatio: aspect }}>
           {img ? (
             <>
@@ -140,20 +142,21 @@ export default function TierListCard({
 
       <div className="p-4">
         <h3 className="font-semibold text-white mb-2 line-clamp-1">{title}</h3>
-        <p className="text-sm text-gray-300 mb-3 line-clamp-2">{description}</p>
-
-        <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
-          <span className="flex items-center">
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        <p className="text-sm text-gray-300 mb-1 line-clamp-2">{description}</p>
+        {createdAt && (
+          <div className="text-xs text-gray-400 mb-3 flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            {views} vues
-          </span>
+            Créée le {new Date(createdAt).toLocaleDateString()}
+          </div>
+        )}
+
+        <div className="flex items-center justify-end text-sm text-gray-400 mb-3">
           <button
             onClick={toggleLike}
             disabled={liking}
-            className={`flex items-center px-2 py-1 rounded transition-colors ${liked ? 'text-pink-400 bg-pink-400/10 border border-pink-400/20' : 'hover:bg-white/10'}`}
+            className={`cursor-pointer flex items-center px-2 py-1 rounded transition-colors ${liked ? 'text-pink-400 bg-pink-400/10 border border-pink-400/20' : 'hover:bg-white/10'}`}
             aria-pressed={liked || false}
             aria-label={liked ? 'Retirer le like' : 'Liker'}
           >
@@ -166,12 +169,12 @@ export default function TierListCard({
 
         {!hideActions && (
           <div className="flex gap-2">
-            <Link href={viewHref} className="flex-1">
+            <Link href={viewHref} className="flex-1 cursor-pointer">
               <Button variant="primary" size="sm" className="w-full">Voir</Button>
             </Link>
-            <Button variant="secondary" size="sm" onClick={onEdit} className="flex-1">Modifier</Button>
+            <Button variant="secondary" size="sm" onClick={onEdit} className="flex-1 cursor-pointer">Modifier</Button>
             {onDelete && (
-              <Button variant="danger" size="sm" onClick={onDelete} className="flex-1">Supprimer</Button>
+              <Button variant="danger" size="sm" onClick={onDelete} className="flex-1 cursor-pointer">Supprimer</Button>
             )}
           </div>
         )}

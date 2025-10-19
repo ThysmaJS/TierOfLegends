@@ -14,9 +14,10 @@ async function getTierLists() {
     category: d.category ?? 'champion-skins',
     championId: d.championId,
     coverImageUrl: d.coverImageUrl,
-    description: `${d.tiers[0]?.items.length ?? 0} items classés · ${d.category ?? 'champion-skins'}`,
+  description: `${d.category ?? 'champion-skins'}`,
     views: d.views ?? 0,
     likes: d.likes ?? 0,
+    createdAt: d.createdAt.toISOString(),
     gradientFrom: 'from-blue-600',
     gradientTo: 'to-purple-500',
     previewText: (d.championId || d.category || 'TL').slice(0,4).toUpperCase(),
@@ -42,7 +43,6 @@ export default async function TierListPage() {
             </p>
           </div>
           <div className="flex gap-3 items-center">
-              <TierListFilters />
             {isAuthed && (
               <Link href="/tier-lists/new" className="inline-flex items-center px-5 py-3 rounded-lg bg-blue-600 text-white text-sm font-medium shadow hover:bg-blue-700 transition-colors">
                 + Créer une Tier List
@@ -51,8 +51,13 @@ export default async function TierListPage() {
           </div>
         </div>
 
+        {/* Filtres */}
+        <div className="mb-8">
+          <TierListFilters />
+        </div>
+
         {/* Stats globales (mock) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-5 text-center shadow-sm">
             <div className="text-2xl font-bold text-blue-400">{tierLists.length}</div>
             <div className="text-xs uppercase tracking-wide text-gray-400">Tier Lists</div>
@@ -61,10 +66,7 @@ export default async function TierListPage() {
             <div className="text-2xl font-bold text-purple-400">{tierLists.reduce((acc,t)=>acc+t.likes,0)}</div>
             <div className="text-xs uppercase tracking-wide text-gray-400">Likes cumulés</div>
           </div>
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-5 text-center shadow-sm">
-            <div className="text-2xl font-bold text-green-400">{tierLists.reduce((acc,t)=>acc+t.views,0)}</div>
-            <div className="text-xs uppercase tracking-wide text-gray-400">Vues cumulées</div>
-          </div>
+            {/* Vues retirées */}
         </div>
 
         <ClientFilteredGrid tierLists={tierLists} />

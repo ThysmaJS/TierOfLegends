@@ -192,6 +192,7 @@ export default function ClientProfil() {
                     previewText={(t.championId || 'TL').slice(0,4).toUpperCase()}
                     championId={t.championId}
                     imageUrl={t.coverImageUrl}
+                    createdAt={t.updatedAt}
                     onEdit={() => router.push(`/tier-lists/${t.id}`)}
                     onDelete={async () => {
                       if (!confirm('Supprimer cette tier list ?')) return;
@@ -221,13 +222,14 @@ export default function ClientProfil() {
                     id={t.id}
                     title={t.title}
                     description={`MAJ ${new Date(t.updatedAt).toLocaleDateString()}`}
-                    views={t.views}
+                    views={0}
                     likes={t.likes}
                     gradientFrom="from-blue-600"
                     gradientTo="to-purple-500"
                     previewText={(t.championId || 'TL').slice(0,4).toUpperCase()}
                     championId={t.championId}
                     imageUrl={t.coverImageUrl}
+                    createdAt={t.updatedAt}
                   />
                 ))}
               </div>
