@@ -1,7 +1,21 @@
 export const metadata = {
   title: "À propos — Tier of Legends",
   description: "Découvrez le projet, les sources de données et les objectifs de Tier of Legends.",
-};
+  alternates: { canonical: "/a-propos" },
+  openGraph: {
+    type: "article",
+    url: "/a-propos",
+    title: "À propos — Tier of Legends",
+    description: "Découvrez le projet, les sources de données et les objectifs de Tier of Legends.",
+    images: [{ url: "/window.svg", width: 1200, height: 630, alt: "Tier of Legends" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "À propos — Tier of Legends",
+    description: "Découvrez le projet, les sources de données et les objectifs de Tier of Legends.",
+    images: ["/window.svg"],
+  },
+} as const;
 
 import { getDictionary } from '@/i18n/getDictionary';
 

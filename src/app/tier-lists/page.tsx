@@ -6,6 +6,25 @@ import type { TierListDoc } from '@/types/tierlist';
 import TierListFilters from '@/components/tierlist/TierListFilters';
 import ClientFilteredGrid from '@/app/tier-lists/pageClient';
 
+export const metadata = {
+  title: 'Tier Lists Communauté — Tier of Legends',
+  description: 'Explore les tier lists créées par la communauté League of Legends et filtre par catégorie.',
+  alternates: { canonical: '/tier-lists' },
+  openGraph: {
+    type: 'website',
+    url: '/tier-lists',
+    title: 'Tier Lists Communauté — Tier of Legends',
+    description: 'Explore les tier lists créées par la communauté League of Legends et filtre par catégorie.',
+    images: [{ url: '/window.svg', width: 1200, height: 630, alt: 'Tier of Legends' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tier Lists Communauté — Tier of Legends',
+    description: 'Explore les tier lists créées par la communauté League of Legends et filtre par catégorie.',
+    images: ['/window.svg'],
+  },
+} as const;
+
 async function getTierLists() {
   const col = await getCollection<TierListDoc>('tierlists');
   const docs = await col.find({}, { sort: { updatedAt: -1 }, limit: 60 }).toArray();

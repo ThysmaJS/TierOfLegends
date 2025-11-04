@@ -7,6 +7,25 @@ import { TierListCard } from '@/components/tierlist';
 
 export const revalidate = 600; // rafraîchit toutes les 10 min
 
+export const metadata = {
+  title: 'Tier of Legends - Crée et partage des Tier Lists LoL',
+  description: 'Classe tes skins, objets, sorts et runes de League of Legends, découvre les listes de la communauté et partage les tiennes.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    url: '/',
+    title: 'Tier of Legends - Crée et partage des Tier Lists LoL',
+    description: 'Classe tes skins, objets, sorts et runes de League of Legends, découvre les listes de la communauté et partage les tiennes.',
+    images: [{ url: '/window.svg', width: 1200, height: 630, alt: 'Tier of Legends' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tier of Legends - Crée et partage des Tier Lists LoL',
+    description: 'Classe tes skins, objets, sorts et runes de League of Legends, découvre les listes de la communauté et partage les tiennes.',
+    images: ['/window.svg'],
+  },
+} as const;
+
 async function getHomeStats() {
   const col = await getCollection<TierListDoc>('tierlists');
   const docs = await col.find({}, { sort: { updatedAt: -1 }, limit: 6 }).toArray();

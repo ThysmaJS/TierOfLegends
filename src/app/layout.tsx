@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header, Footer } from "../components/layout";
 import AuthProvider from "../components/auth/SessionProvider";
 import ReduxProvider from "../components/redux/ReduxProvider";
+import { getSiteUrl } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,41 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Tier of Legends - Skins Tier Lists",
   description: "Créez et partagez vos tier lists des skins League of Legends. Classez vos skins favoris et découvrez les préférences de la communauté.",
+  metadataBase: new URL(getSiteUrl()),
+  applicationName: "Tier of Legends",
+  keywords: [
+    "tier list",
+    "league of legends",
+    "lol",
+    "skins",
+    "classement",
+    "runes",
+    "objets",
+    "sorts d'invocateur"
+  ],
+  authors: [{ name: "Tier of Legends" }],
+  creator: "Tier of Legends",
+  publisher: "Tier of Legends",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Tier of Legends",
+    title: "Tier of Legends - Skins Tier Lists",
+    description: "Créez et partagez vos tier lists des skins League of Legends.",
+    images: [
+      { url: "/window.svg", width: 1200, height: 630, alt: "Tier of Legends" }
+    ],
+    locale: "fr_FR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@tieroflegends",
+    creator: "@tieroflegends",
+    title: "Tier of Legends - Skins Tier Lists",
+    description: "Créez et partagez vos tier lists des skins League of Legends.",
+    images: ["/window.svg"],
+  },
 };
 
 type RootProps = { children: React.ReactNode };
