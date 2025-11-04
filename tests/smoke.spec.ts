@@ -17,10 +17,11 @@ test('tier lists filter and open detail', async ({ page }) => {
   const cardLinks = page.locator('a[href^="/tier-lists/"]:not([href$="/new"])');
   const count = await cardLinks.count();
   test.skip(count === 0, 'No tier lists available to open');
-  await cardLinks.first().click();
 
-  // Expect to land on a detail page whose pathname starts with /tier-lists/
-  await expect(page).toHaveURL(/\/tier-lists\//);
+  await Promise.all([
+    page.waitForURL(/\/tier-lists\//, { timeout: 10000 }),
+    cardLinks.first().click()
+  ]);
 
   // Basic smoke assertion: page has heading or content
   await expect(page.locator('h1, h2, [data-testid="tierlist-title"]').first()).toBeVisible();
