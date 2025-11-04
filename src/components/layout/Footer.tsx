@@ -38,6 +38,11 @@ export default function Footer() {
                   Profil
                 </Link>
               </li>
+              <li>
+                <Link href="/a-propos" className="text-gray-400 hover:text-white transition-colors">
+                  À propos
+                </Link>
+              </li>
             </ul>
           </div>
 
