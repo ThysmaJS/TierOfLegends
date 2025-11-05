@@ -1,5 +1,6 @@
 import { cachedChampionDetails, cachedItemList, cachedSummonerSpells, cachedRunesKeystones } from '@/lib/riot';
 import type { NextRequest } from 'next/server';
+import { logger, errorMeta } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -95,7 +96,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // no rarity category supported
 
   return Response.json({ error: 'Catégorie inconnue' }, { status: 400 });
-  } catch {
+  } catch (err) {
+    logger.error('GET /api/categories/[category] failed', { category, query: Object.fromEntries(searchParams), ...errorMeta(err) });
     return Response.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { getCollection } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import type { TierListDoc } from '@/types/tierlist';
 import type { NextRequest } from 'next/server';
+import { logger, errorMeta } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -33,7 +34,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   const doc = await colTl.findOne<{ likes: number }>({ _id: tlId }, { projection: { likes: 1 } });
     const likes = doc?.likes ?? 0;
     return Response.json({ liked: true, likes });
-  } catch {
+  } catch (err) {
+    logger.error('POST /api/tierlists/[id]/like failed', { ...errorMeta(err) });
     return new Response('Erreur serveur', { status: 500 });
   }
 }
@@ -57,7 +59,8 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const doc = await colTl.findOne<{ likes: number }>({ _id: tlId }, { projection: { likes: 1 } });
     const likes = doc?.likes ?? 0;
     return Response.json({ liked: false, likes });
-  } catch {
+  } catch (err) {
+    logger.error('DELETE /api/tierlists/[id]/like failed', { ...errorMeta(err) });
     return new Response('Erreur serveur', { status: 500 });
   }
 }

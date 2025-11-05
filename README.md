@@ -15,6 +15,7 @@ Plateforme Next.js (FR) pour créer, classer et partager des tier lists autour d
 - Pagination côté client sur les listes publiques et admin
 - Admin (rôle) pour modérer les utilisateurs et les tier lists
 - Formulaires de connexion/inscription: bouton œil pour afficher/masquer le mot de passe
+- Logs structurés en prod (centralisés) via un logger interne
 
 ## 🧱 Stack technique
 
@@ -40,13 +41,14 @@ src/
       profile/           # /api/profile (+ avatar, email)
       auth/[...nextauth] # NextAuth
     a-propos/
-    error.tsx           # error boundary
+    error.tsx           # error boundary (client) avec reporting minimal en prod
     not-found.tsx       # 404
     robots.ts / sitemap.ts
   components/
   lib/riot.ts           # accès DDragon + wrappers de cache
   lib/mongodb.ts        # helper MongoDB (server-only)
   lib/authz.ts          # garde ADMIN côté serveur
+  lib/logger.ts         # logger structuré (prod: JSON monoligne)
   i18n/
   store/                # Redux
 middleware.ts           # protection /profil, /tier-lists/new
@@ -59,6 +61,9 @@ Voir `.env.example` et créer un `.env.local` (non versionné). Minimum:
 - `NEXTAUTH_URL` — URL du site (ex: http://localhost:3000)
 - `NEXTAUTH_SECRET` — secret NextAuth (ex: `openssl rand -base64 32`)
 - `MONGODB_URI` — connexion MongoDB (Atlas recommandé)
+
+Optionnel:
+- `DISABLE_AUTH=true` — kill switch middleware
 
 Les `.env*` sont gitignorés.
 
@@ -147,12 +152,20 @@ npx playwright test tests/not-found.spec.ts --headed
 npx playwright show-trace path/to/trace.zip
 ```
 
-### Scénarios authentifiés (optionnel)
+### Logs en production
 
-Pour tester la création réelle, like/unlike, etc.:
-- Créez un compte de test et seed minimal en DB.
-- Exposez des variables d’environnement de test si nécessaire.
-- Ajoutez des tests e2e authentifiés (non inclus par défaut pour rester agnostique à l’environnement).
+- Un logger centralisé est disponible: `src/lib/logger.ts`.
+  - En prod: sortie JSON monoligne (compatible collecte/ELK/Datadog). En dev: console lisible.
+  - API clés instrumentées: tierlists (GET/POST/DELETE), likes (POST/DELETE), champions (GET/[id]), categories (GET), register, profile.
+  - Exemple d’usage:
+
+```ts
+import { logger, errorMeta } from '@/lib/logger';
+logger.info('Action réussie', { context: 'feature-x', userId });
+logger.error('Action échouée', { ...errorMeta(err), input });
+```
+
+- La page `src/app/error.tsx` effectue un reporting minimal client->serveur uniquement en prod (en-tête HTTP) pour signaler les erreurs globales sans exposer d’infos sensibles.
 
 ## 🗄️ Base de données
 

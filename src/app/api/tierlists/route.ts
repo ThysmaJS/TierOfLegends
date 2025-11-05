@@ -5,6 +5,7 @@ import type { TierListDoc, TierListCreateInput } from '@/types/tierlist';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { cachedChampionDetails, cachedItemList, cachedRunesKeystones, cachedSummonerSpells } from '@/lib/riot';
+import { logger, errorMeta } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -38,7 +39,9 @@ export async function GET() {
           const userLikes = await likesCol.find({ userId: dbUser._id }).toArray();
           likedIds = new Set(userLikes.map(l => l.tierListId.toString()));
         }
-      } catch {}
+      } catch (err) {
+        logger.warn('Failed to enrich likedByMe', { context: 'GET /api/tierlists', reason: 'user lookup failed' });
+      }
     }
     const col = await getCollection<TierListDoc>('tierlists');
     const docs = await col.find({}, { sort: { updatedAt: -1 }, limit: 60 }).toArray();
@@ -57,7 +60,8 @@ export async function GET() {
       likedByMe: likedIds.has(d._id.toString()),
     }));
     return Response.json({ tierlists: data });
-  } catch {
+  } catch (err) {
+    logger.error('GET /api/tierlists failed', { ...errorMeta(err) });
     return new Response('Erreur serveur', { status: 500 });
   }
 }
@@ -122,7 +126,9 @@ export async function POST(req: NextRequest) {
             }
           }
         }
-      } catch {}
+      } catch (err) {
+        logger.warn('Cover generation failed, proceeding without cover', { ...errorMeta(err) });
+      }
     }
 
     const insert = await col.insertOne({
@@ -141,7 +147,8 @@ export async function POST(req: NextRequest) {
     } as unknown as TierListDoc);
 
     return Response.json({ id: insert.insertedId.toString() }, { status: 201 });
-  } catch {
+  } catch (err) {
+    logger.error('POST /api/tierlists failed', { ...errorMeta(err) });
     return new Response('Erreur serveur', { status: 500 });
   }
 }

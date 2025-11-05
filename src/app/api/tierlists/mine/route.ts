@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { getCollection } from '@/lib/mongodb';
 import type { TierListDoc } from '@/types/tierlist';
+import { logger, errorMeta } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -25,7 +26,8 @@ export async function GET() {
       updatedAt: d.updatedAt.toISOString(),
     }));
     return Response.json({ tierlists: data });
-  } catch {
+  } catch (err) {
+    logger.error('GET /api/tierlists/mine failed', { ...errorMeta(err) });
     return new Response('Erreur serveur', { status: 500 });
   }
 }

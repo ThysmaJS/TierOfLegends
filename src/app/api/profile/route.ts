@@ -3,6 +3,7 @@ import { getCollection } from '@/lib/mongodb';
 import { auth } from '@/auth';
 import { z, ZodError } from 'zod';
 import { ObjectId } from 'mongodb';
+import { logger, errorMeta } from '@/lib/logger';
 
 const Schema = z.object({
   username: z.string().trim().toLowerCase().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/).optional(),
@@ -43,7 +44,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ ok: true });
   } catch (e) {
     if (e instanceof ZodError) return NextResponse.json({ error: e.issues.map(i=>i.message).join(', ') }, { status: 400 });
-    console.error('Profile update error', e);
+    logger.error('PATCH /api/profile failed', { ...errorMeta(e) });
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { getCollection } from '@/lib/mongodb';
 import type { TierListDoc } from '@/types/tierlist';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { logger, errorMeta } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,8 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
     const res = await col.deleteOne({ _id: new ObjectId(id), userId: dbUser._id });
     if (res.deletedCount === 0) return new Response('Not Found', { status: 404 });
     return new Response(null, { status: 204 });
-  } catch {
+  } catch (err) {
+    logger.error('DELETE /api/tierlists/[id] failed', { ...errorMeta(err) });
     return new Response('Erreur serveur', { status: 500 });
   }
 }

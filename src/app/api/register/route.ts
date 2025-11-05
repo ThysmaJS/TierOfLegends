@@ -3,6 +3,7 @@ import { getCollection } from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
 import { z, ZodError } from 'zod';
 import type { MongoServerError } from 'mongodb';
+import { logger, errorMeta } from '@/lib/logger';
 
 const PasswordSchema = z.string()
   .min(8, 'Au moins 8 caractères')
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: payload, ...(detail ? { detail } : {}) }, { status: 409 });
     }
     const message = e instanceof Error ? e.message : 'Failed to register';
-    console.error('Register error', e);
+    logger.error('POST /api/register failed', { ...errorMeta(e) });
     const payload: { error: { fieldErrors: Record<string, string[]>; formErrors: string[] }; detail?: string } = { error: { fieldErrors: {}, formErrors: ['Failed to register'] } };
     if (process.env.NODE_ENV !== 'production') payload.detail = message;
     return NextResponse.json(payload, { status: 500 });
