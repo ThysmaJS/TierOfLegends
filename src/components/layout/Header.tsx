@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { Avatar } from '../ui';
+import React from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function Header() {
   const { data: session } = useSession();
@@ -13,6 +15,10 @@ export default function Header() {
   const image = (session?.user?.image as string) || '';
   const initials = (username || email || 'U').slice(0, 2).toUpperCase();
   const isAdmin = (session?.user as unknown as { role?: 'USER' | 'ADMIN' })?.role === 'ADMIN';
+
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const pathname = usePathname();
+  React.useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   return (
     <header className="bg-gray-900 shadow-lg">
@@ -101,7 +107,12 @@ export default function Header() {
                 <Link href="/admin" className="text-gray-400 transition hover:text-white">Admin</Link>
               )}
               <button
-                className="rounded-sm bg-gray-800 p-2 text-gray-400 transition hover:text-white"
+                type="button"
+                aria-label="Ouvrir le menu"
+                aria-controls="mobile-menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen(o => !o)}
+                className="rounded-sm bg-gray-800 p-2 text-gray-400 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -115,6 +126,38 @@ export default function Header() {
                 </svg>
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Mobile menu panel */}
+        <div id="mobile-menu" className={`${menuOpen ? 'block' : 'hidden'} md:hidden pb-4`}>
+          <nav aria-label="Mobile">
+            <ul className="flex flex-col gap-3 text-sm">
+              <li>
+                <Link onClick={() => setMenuOpen(false)} className="block rounded px-3 py-2 text-gray-200 hover:bg-white/10" href="/tier-lists">Tier Lists</Link>
+              </li>
+              {isAuthed && (
+                <li>
+                  <Link onClick={() => setMenuOpen(false)} className="block rounded px-3 py-2 text-gray-200 hover:bg-white/10" href="/profil">Profil</Link>
+                </li>
+              )}
+              {isAuthed && isAdmin && (
+                <li>
+                  <Link onClick={() => setMenuOpen(false)} className="block rounded px-3 py-2 text-gray-200 hover:bg-white/10" href="/admin">Admin</Link>
+                </li>
+              )}
+            </ul>
+          </nav>
+
+          <div className="mt-3 border-t border-white/10 pt-3">
+            {!isAuthed ? (
+              <div className="flex flex-col gap-2">
+                <Link onClick={() => setMenuOpen(false)} href="/login" className="block rounded bg-blue-600 px-4 py-2 text-sm text-white text-center hover:bg-blue-700">Se connecter</Link>
+                <Link onClick={() => setMenuOpen(false)} href="/register" className="block rounded bg-gray-800 px-4 py-2 text-sm text-white text-center hover:bg-gray-700">S&apos;inscrire</Link>
+              </div>
+            ) : (
+              <button onClick={() => { setMenuOpen(false); signOut({ callbackUrl: '/' }); }} className="w-full rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Se déconnecter</button>
+            )}
           </div>
         </div>
       </div>
