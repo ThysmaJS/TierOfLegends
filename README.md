@@ -9,7 +9,7 @@ Plateforme Next.js (FR) pour créer, classer et partager des tier lists autour d
 - Sauvegarde en base (MongoDB), profil utilisateur (avatar, email, pseudo), routes protégées
 - Données Riot Data Dragon en français (images optimisées via `next/image`), cache de données Next.js
 - Recherche côté client (Redux Toolkit), pages SEO (robots, sitemap), i18n FR
-- Tests end-to-end avec Playwright (smoke test fourni)
+- Tests end-to-end avec Playwright (succès/erreur, navigation, auth, 404, validations)
 - Likes sur les tier lists (coeur) avec persistance après refresh
 - Couverture des tier lists: image manuelle ou aléatoire déterministe (stable) selon la catégorie
 - Pagination côté client sur les listes publiques et admin
@@ -91,6 +91,8 @@ Scripts utiles:
 
 ## 🧪 Tests (Playwright)
 
+Pré-requis: l’app doit tourner (par défaut sur http://localhost:3000) ou définissez `PLAYWRIGHT_BASE_URL`.
+
 1) Installer les navigateurs Playwright (une fois):
 
 ```bash
@@ -104,7 +106,53 @@ npm run dev
 npm run test:e2e:headed
 ```
 
-Autres scripts: `test:e2e`, `test:e2e:ui`. Pour une URL différente: `PLAYWRIGHT_BASE_URL`.
+Autres scripts: `test:e2e`, `test:e2e:ui`. Pour une URL différente:
+
+```bash
+PLAYWRIGHT_BASE_URL="http://localhost:3001" npm run test:e2e
+```
+
+Exécuter un seul fichier:
+
+```bash
+npx playwright test tests/not-found.spec.ts --headed
+```
+
+### Scénarios couverts
+
+- `tests/smoke.spec.ts` — accueil, titre, navigation vers un détail de tier list (skip si aucune TL)
+- `tests/footer-about.spec.ts` — lien footer « À propos » -> navigation OK
+- `tests/header-cta.spec.ts` — CTA « Explorer » -> /tier-lists, « Créer » -> /tier-lists/new ou redirection /login
+- `tests/not-found.spec.ts` — route inconnue -> page 404 personnalisée
+- `tests/login-validation.spec.ts` — validations client sur /login, vérifie la préservation de callbackUrl depuis /profil
+- `tests/auth-redirects.spec.ts` — redirections middleware/protégées: /tier-lists/new et /profil pour anonymes
+- `tests/admin-access.spec.ts` — /admin interdit aux anonymes -> /login?callbackUrl=%2Fadmin
+- `tests/like-anon.spec.ts` — like en anonyme sur une carte -> redirection /login (skip si aucune TL)
+- `tests/create-tierlist-validation.spec.ts` — validations client sur la page création (skip si redirigé vers /login)
+
+### Robustesse & CI
+
+- Les tests attendent explicitement les navigations (`waitForURL`, `waitForLoadState('networkidle')`).
+- Comportements dépendants de la DB/seed ou de l’auth sont Skip si prérequis absents (pas de fausse alerte).
+- `playwright.config.ts`: `retries` activé sur CI, `trace: 'on-first-retry'`, `workers: 1` sur CI.
+- Base URL configurable via `PLAYWRIGHT_BASE_URL`.
+
+### Débogage
+
+- Mode UI: `npm run test:e2e:ui`
+- Inspecteur: `PWDEBUG=1 npx playwright test`
+- Traces: sur échec en CI, une trace est générée (on-first-retry). En local, vous pouvez lancer:
+
+```bash
+npx playwright show-trace path/to/trace.zip
+```
+
+### Scénarios authentifiés (optionnel)
+
+Pour tester la création réelle, like/unlike, etc.:
+- Créez un compte de test et seed minimal en DB.
+- Exposez des variables d’environnement de test si nécessaire.
+- Ajoutez des tests e2e authentifiés (non inclus par défaut pour rester agnostique à l’environnement).
 
 ## 🗄️ Base de données
 
